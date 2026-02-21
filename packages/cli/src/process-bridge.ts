@@ -11,7 +11,7 @@ export class ProcessBridge {
   constructor(command: string, args: string[], cwd?: string) {
     this.proc = spawn(command, args, {
       cwd: cwd ?? process.cwd(),
-      env: { ...process.env, CLAUDECODE: '' } as Record<string, string>,
+      env: Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'CLAUDECODE')) as Record<string, string>,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
 

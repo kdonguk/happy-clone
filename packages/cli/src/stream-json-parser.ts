@@ -68,18 +68,8 @@ export class StreamJsonParser {
       return null
     }
 
-    // Result message (final response)
-    if (type === 'result') {
-      const result = obj.result as string | undefined
-      if (result) return { type: 'text', text: result }
-      // Check for content in result
-      const content = (obj as Record<string, unknown>).content as Array<Record<string, unknown>> | undefined
-      if (content) {
-        const texts = content
-          .filter((c) => c.type === 'text' && typeof c.text === 'string')
-          .map((c) => c.text as string)
-        if (texts.length > 0) return { type: 'text', text: texts.join('') }
-      }
+    // Result message - skip (duplicate of assistant message)
+    if (type === 'result' || type === 'rate_limit_event') {
       return null
     }
 
@@ -106,8 +96,8 @@ export class StreamJsonParser {
 /** Format user text as stream-json input for Claude Code */
 export function formatStreamJsonInput(text: string): string {
   const msg = {
-    type: 'user_input',
-    content: text,
+    type: 'user',
+    message: { role: 'user', content: text },
   }
   return JSON.stringify(msg) + '\n'
 }
