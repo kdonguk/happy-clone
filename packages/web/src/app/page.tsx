@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useSessions } from '../hooks/useSessions'
 import { SessionList } from '../components/SessionList'
-import { Terminal } from '../components/Terminal'
+import { ChatView } from '../components/ChatView'
 import { InputBar } from '../components/InputBar'
 
 export default function Home() {
@@ -29,10 +29,13 @@ export default function Home() {
         {activeSession ? (
           <>
             <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-              <span className="font-bold">{activeSession.name}</span>
+              <div>
+                <span className="font-bold">{activeSession.name}</span>
+                <span className="ml-3 text-xs text-gray-500 font-mono">{activeSession.cwd}</span>
+              </div>
               <span className="text-sm text-gray-400">{activeSession.status}</span>
             </div>
-            <Terminal lines={activeOutput} />
+            <ChatView messages={activeOutput} />
             <InputBar
               onSend={(text) => sendInput(activeSession.id, text)}
               onApprove={() => approve(activeSession.id)}

@@ -1,12 +1,12 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import type { SessionInfo, ServerMessage } from '@happy/shared'
+import type { SessionInfo, ServerMessage, ChatMessage } from '@happy/shared'
 import { useWebSocket } from './useWebSocket'
 
 export function useSessions() {
   const ws = useWebSocket()
   const [sessions, setSessions] = useState<SessionInfo[]>([])
-  const [outputs, setOutputs] = useState<Record<string, string[]>>({})
+  const [outputs, setOutputs] = useState<Record<string, ChatMessage[]>>({})
 
   useEffect(() => {
     const unsub = ws.onMessage((msg: ServerMessage) => {
@@ -20,7 +20,16 @@ export function useSessions() {
         case 'session:output':
           setOutputs((prev) => ({
             ...prev,
-            [msg.sessionId]: [...(prev[msg.sessionId] ?? []), msg.text],
+            [msg.sessionId]: [...(prev[msg.sessionId] ?? []), { role: 'assistant', text: msg.text }],
+          }))
+          break
+        case 'session:approval-needed':
+          setOutputs((prev) => ({
+            ...prev,
+            [msg.sessionId]: [
+              ...(prev[msg.sessionId] ?? []),
+              { role: 'tool', text: `[Tool: ${msg.tool}] ${msg.description}` },
+            ],
           }))
           break
         case 'session:status':
@@ -51,6 +60,10 @@ export function useSessions() {
   }, [ws])
 
   const sendInput = useCallback((sessionId: string, text: string) => {
+    setOutputs((prev) => ({
+      ...prev,
+      [sessionId]: [...(prev[sessionId] ?? []), { role: 'user', text }],
+    }))
     ws.send({ type: 'session:input', sessionId, text })
   }, [ws])
 

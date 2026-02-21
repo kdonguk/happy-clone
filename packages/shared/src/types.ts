@@ -1,5 +1,10 @@
 export type SessionStatus = 'running' | 'waiting_input' | 'waiting_approval' | 'idle' | 'ended'
 
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'tool'
+  text: string
+}
+
 export interface SessionInfo {
   id: string
   name: string
