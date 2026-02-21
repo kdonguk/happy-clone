@@ -1,6 +1,22 @@
 import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import type { SessionInfo } from '@happy/shared'
 import { ProcessBridge } from './process-bridge.js'
+import { StreamJsonParser, formatStreamJsonInput } from './stream-json-parser.js'
+
+const CLAUDE_PATHS = [
+  '/usr/local/bin/claude',
+  '/opt/homebrew/bin/claude',
+  `${process.env.HOME}/.nvm/versions/node/v24.12.0/bin/claude`,
+  'claude',
+]
+
+function findClaude(): string {
+  for (const p of CLAUDE_PATHS) {
+    if (existsSync(p)) return p
+  }
+  return 'claude'
+}
 
 interface SessionEntry {
   info: SessionInfo
@@ -27,11 +43,16 @@ export class SessionManager {
   create(opts: CreateOptions = {}): SessionInfo {
     const id = randomUUID()
     const name = opts.name ?? `session-${this.sessions.size + 1}`
-    const command = opts.command ?? 'claude'
-    const args = opts.args ?? []
+    const command = opts.command ?? findClaude()
+    const args = opts.args ?? ['-p', '--input-format', 'stream-json', '--output-format', 'stream-json']
     const cwd = opts.cwd ?? process.cwd()
 
-    const bridge = new ProcessBridge(command, args, cwd)
+    let bridge: ProcessBridge
+    try {
+      bridge = new ProcessBridge(command, args, cwd)
+    } catch (err) {
+      throw new Error(`Failed to spawn process "${command}": ${err}`)
+    }
 
     const info: SessionInfo = {
       id,
@@ -41,9 +62,13 @@ export class SessionManager {
       cwd,
     }
 
+    const parser = new StreamJsonParser()
     bridge.onOutput((data) => {
-      info.lastOutput = data.slice(-200)
-      this.eventHandler?.(id, 'output', data)
+      const events = parser.feed(data)
+      for (const event of events) {
+        info.lastOutput = event.text.slice(-200)
+        this.eventHandler?.(id, 'output', event.text)
+      }
     })
 
     bridge.onExit(() => {
@@ -68,7 +93,7 @@ export class SessionManager {
   write(id: string, text: string): void {
     const entry = this.sessions.get(id)
     if (!entry) throw new Error(`Session ${id} not found`)
-    entry.bridge.write(text)
+    entry.bridge.write(formatStreamJsonInput(text))
   }
 
   kill(id: string): void {

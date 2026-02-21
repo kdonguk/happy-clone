@@ -29,13 +29,21 @@ export function useSessions() {
           )
           break
         case 'session:ended':
-          setSessions((prev) => prev.filter((s) => s.id !== msg.sessionId))
+          setSessions((prev) =>
+            prev.map((s) => (s.id === msg.sessionId ? { ...s, status: 'ended' } : s))
+          )
           break
       }
     })
 
-    ws.send({ type: 'session:list' })
-    return unsub
+    const unsubConnect = ws.onConnect(() => {
+      ws.send({ type: 'session:list' })
+    })
+
+    return () => {
+      unsub()
+      unsubConnect()
+    }
   }, [ws])
 
   const createSession = useCallback((name?: string) => {

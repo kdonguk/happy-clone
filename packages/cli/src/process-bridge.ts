@@ -1,27 +1,32 @@
-import * as pty from 'node-pty'
+import { spawn, type ChildProcess } from 'node:child_process'
 
 type OutputHandler = (data: string) => void
 type ExitHandler = (code: number) => void
 
 export class ProcessBridge {
-  private proc: pty.IPty
+  private proc: ChildProcess
   private outputHandlers: OutputHandler[] = []
   private exitHandlers: ExitHandler[] = []
 
   constructor(command: string, args: string[], cwd?: string) {
-    this.proc = pty.spawn(command, args, {
-      name: 'xterm-256color',
-      cols: 120,
-      rows: 40,
+    this.proc = spawn(command, args, {
       cwd: cwd ?? process.cwd(),
+      env: { ...process.env, CLAUDECODE: '' } as Record<string, string>,
+      stdio: ['pipe', 'pipe', 'pipe'],
     })
 
-    this.proc.onData((data) => {
-      for (const handler of this.outputHandlers) handler(data)
+    this.proc.stdout?.on('data', (data: Buffer) => {
+      const text = data.toString()
+      for (const handler of this.outputHandlers) handler(text)
     })
 
-    this.proc.onExit(({ exitCode }) => {
-      for (const handler of this.exitHandlers) handler(exitCode)
+    this.proc.stderr?.on('data', (data: Buffer) => {
+      const text = data.toString()
+      for (const handler of this.outputHandlers) handler(text)
+    })
+
+    this.proc.on('exit', (code) => {
+      for (const handler of this.exitHandlers) handler(code ?? 1)
     })
   }
 
@@ -34,11 +39,11 @@ export class ProcessBridge {
   }
 
   write(data: string): void {
-    this.proc.write(data)
+    this.proc.stdin?.write(data)
   }
 
-  resize(cols: number, rows: number): void {
-    this.proc.resize(cols, rows)
+  resize(_cols: number, _rows: number): void {
+    // No-op for child_process (no PTY)
   }
 
   kill(): void {
@@ -46,6 +51,6 @@ export class ProcessBridge {
   }
 
   get pid(): number {
-    return this.proc.pid
+    return this.proc.pid ?? -1
   }
 }

@@ -49,9 +49,13 @@ export function createWsServer(manager: SessionManager, opts: WsServerOptions) {
           sendTo(ws, { type: 'session:list', sessions: manager.list() })
           break
         case 'session:create': {
-          const session = manager.create({ name: msg.name, cwd: msg.cwd })
-          broadcast({ type: 'session:created', session })
-          subscriptions.get(ws)?.add(session.id)
+          try {
+            const session = manager.create({ name: msg.name, cwd: msg.cwd })
+            broadcast({ type: 'session:created', session })
+            subscriptions.get(ws)?.add(session.id)
+          } catch (err) {
+            sendTo(ws, { type: 'error', message: `Failed to create session: ${err}` })
+          }
           break
         }
         case 'session:kill':
@@ -67,10 +71,10 @@ export function createWsServer(manager: SessionManager, opts: WsServerOptions) {
           manager.write(msg.sessionId, msg.text)
           break
         case 'session:approve':
-          manager.write(msg.sessionId, 'y\n')
+          manager.write(msg.sessionId, 'yes')
           break
         case 'session:deny':
-          manager.write(msg.sessionId, 'n\n')
+          manager.write(msg.sessionId, 'no')
           break
       }
     })
