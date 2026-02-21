@@ -1,0 +1,21 @@
+{
+  "name": "@happy/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": { "happy": "dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@happy/shared": "workspace:*",
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.0",
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.0",
+    "@types/express": "^5.0.0",
+    "typescript": "^5.7.0"
+  }
+}
