@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { SessionInfo, SessionStatus } from '@happy/shared'
+import type { SessionInfo } from '@happy/shared'
 import { ProcessBridge } from './process-bridge.js'
 
 interface SessionEntry {

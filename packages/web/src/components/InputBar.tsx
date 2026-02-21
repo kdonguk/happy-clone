@@ -1,5 +1,5 @@
 'use client'
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 
 interface Props {
   onSend: (text: string) => void
@@ -11,7 +11,7 @@ interface Props {
 export function InputBar({ onSend, onApprove, onDeny, showApproval }: Props) {
   const [text, setText] = useState('')
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!text.trim()) return
     onSend(text)
