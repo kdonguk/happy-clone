@@ -19,7 +19,7 @@ const webDir = resolve(__dirname, '../../web/out')
 
 if (existsSync(webDir)) {
   app.use(express.static(webDir))
-  app.get('*', (_req, res) => {
+  app.get('/{*splat}', (_req, res) => {
     res.sendFile(resolve(webDir, 'index.html'))
   })
 }
