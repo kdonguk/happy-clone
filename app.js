@@ -284,7 +284,7 @@
       var hit;
       if (pid && e.pin_id && pid === e.pin_id) hit = true;
       else if (t && norm(e.opinion.comment)) hit = t === norm(e.opinion.comment);
-      else hit = e.pin_no != null && e.pin_no === p.no && e.opinion.tab === p.tab;
+      else hit = false;      // 문구가 비었거나 한쪽만 있으면 붙이지 않는다
       if (!hit) return;
       e.replies.forEach(function (r) {
         if (!out.some(function (x) { return x.id === r.id; })) out.push(r);
@@ -399,7 +399,7 @@
       var rp = normalizeReply(r);
       if (!rp.text) return;
       var cur = norm(r.comment) ? byKey[norm(r.comment)] : null;
-      if (!cur && r.pin_no != null) {
+      if (!cur && !norm(r.comment) && r.pin_no != null) {
         var cands = out.filter(function (o) { return o.pin_no === r.pin_no; });
         if (cands.length === 1) cur = cands[0];
       }
