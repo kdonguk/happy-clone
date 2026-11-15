@@ -328,13 +328,15 @@
   function flowRowOf(id) { return xlinkFlow && xlinkFlow.querySelector('.flow-row[data-for-node="' + id + '"]'); }
 
   /* ── 강조 / 이동 ──────────────────────── */
-  function flash(el, ms) {
+  /* 강조 표시는 다음 선택이 일어날 때까지 남긴다(탭을 오가며 봐도 방금 고른 곳이 보이도록). */
+  function clearMarks() {
+    $$('.is-hit').forEach(function (el) { el.classList.remove('is-hit'); });
+  }
+  function mark(el) {
     if (!el) return;
     el.classList.remove('is-hit');
     void (el.offsetWidth || el.getBoundingClientRect().width);   // 애니메이션 재시작
     el.classList.add('is-hit');
-    clearTimeout(el.__hitTimer);
-    el.__hitTimer = setTimeout(function () { el.classList.remove('is-hit'); }, ms || 2200);
   }
 
   function centerFlowNode(id) {
@@ -359,8 +361,9 @@
     ensureFlowLinks();
     var run = function () {
       centerFlowNode(id);
-      flash(nodeEl(id));
-      flash(flowRowOf(id), 2200);
+      clearMarks();
+      mark(nodeEl(id));
+      mark(flowRowOf(id));
     };
     requestAnimationFrame(run);
   }
@@ -377,7 +380,8 @@
     var card = $('.screen[data-screen="' + sid + '"]');
     requestAnimationFrame(function () {
       scrollScreenTo(card, true);
-      flash(card, 2600);
+      clearMarks();
+      mark(card);
     });
   }
 
@@ -396,13 +400,15 @@
     var ids = allNodeIds(card);
     if (!ids.length) return;
     ensureFlowLinks();
-    ids.forEach(function (id) { flash(nodeEl(id), 1500); flash(flowRowOf(id), 1500); });
+    clearMarks();
+    ids.forEach(function (id) { mark(nodeEl(id)); mark(flowRowOf(id)); });
     centerFlowNode(ids[0]);
   }
   function syncFromNode(g) {
     var ids = screenIds(g);
     if (!ids.length) return;
-    ids.forEach(function (sid) { flash($('.screen[data-screen="' + sid + '"]'), 1500); });
+    clearMarks();
+    ids.forEach(function (sid) { mark($('.screen[data-screen="' + sid + '"]')); });
     scrollScreenTo($('.screen[data-screen="' + ids[0] + '"]'), true);
   }
 
