@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
 <meta name="theme-color" content="#111827">
-<meta name="rb-version" content="2026-11-15.v13-real">
+<meta name="rb-version" content="2026-11-15.v14-real">
 <title>TestAnchor 핀 리뷰 보드</title>
 <meta name="description" content="TestAnchor Studio 실제 화면과 서버 흐름도를 연결해 보는 핀 리뷰 보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111827'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23fbbf24'%3E%F0%9F%93%8C%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=2026-11-15.v13">
+<link rel="stylesheet" href="styles.css?v=2026-11-15.v14">
 </head>
 <body>
 
@@ -99,33 +99,33 @@
                 <span class="fr-item" data-state="locked"><b>05</b>다이어그램</span>
               </div>
 
-              <div class="sec-head"><span class="no">01</span>요구사항<span class="meta">REQ-34 · draft</span></div>
+              <div class="sec-head"><span class="no">01</span>요구사항<span class="meta">REQ-07 · draft</span></div>
               <div class="field" data-label="S1 요구사항 제목">
                 <span class="fl">제목</span>
-                <b>SCOUT-338 그룹별 정산 검증 — 미수 A~G · 수수료 A~E</b>
+                <b>그룹별 정산 검증 — 미수 A~G · 수수료 A~E</b>
               </div>
               <div class="field" data-label="S1 요구사항 본문">
                 <span class="fl">본문</span>
-                <b>그룹 정산 케이스 도식의 미수·수수료 조합을 케이스로 검증한다. 화면 STACBL00600.jsp, API POST /settlement/group/calc 기준.</b>
+                <b>그룹 정산 케이스 도식의 미수·수수료 조합을 케이스로 검증한다. 그룹 정산 화면과 그룹 정산 API 기준.</b>
               </div>
               <div class="field" data-label="S1 기준점 검색">
                 <span class="fl">기준점 검색 (선택)</span>
                 <b class="fph">비우면 분석이 본문에서 앵커를 찾습니다</b>
               </div>
               <div class="row-between">
-                <span class="muted">코드맵 v2026.11.15 · 35,816 노드</span>
+                <span class="muted">코드맵 v2026.11.15 · 정상</span>
                 <span class="btn primary">분석 시작</span>
               </div>
 
               <div class="sec-head"><span class="no">02</span>분석 결과 · 방향 확인<span class="meta">의도 컨펌 대기</span></div>
               <div class="case-card" data-label="S1 분석 기준점">
-                <div class="case-top"><span class="case-id">기준점</span><span class="mchip blue">SettlementGroupService#calculate</span><span class="mchip">domain:group_settlement</span></div>
+                <div class="case-top"><span class="case-id">기준점</span><span class="mchip blue">그룹 정산 서비스 · 계산 메소드</span><span class="mchip">도메인: 그룹 정산</span></div>
                 <p class="case-sub">화면 1 · API 1 · 메소드 1 · 도메인 1 — 앵커 실재성 검사 통과</p>
               </div>
               <div class="case-card" data-label="S1 제안 변경">
                 <div class="case-top"><span class="case-id">STEP 1</span><span class="mchip warn">미수 A</span><span class="mchip ok">수수료 C</span></div>
                 <p class="case-title">그룹 정산 후 잔액이 0원으로 떨어지는지 확인</p>
-                <p class="case-sub">WHERE 그룹번호 = :groupNo · 기대값 calc_amt = 0 · 판정 가능</p>
+                <p class="case-sub">WHERE 그룹 번호 = :groupNo · 기대값 계산 금액 = 0 · 판정 가능</p>
               </div>
               <div class="row-between" data-label="S1 방향 확정">
                 <span class="muted">분석 리뷰 · 차단 결함 0건</span>
@@ -261,7 +261,7 @@
                 <div class="ta-row">
                   <span class="ta-brand"><span class="lg"></span><b>TestAnchor<span>Studio · Dev &amp; Test</span></b></span>
                   <span class="ta-proj"><span class="pd"></span>와디즈 정산 (개발계) ▾</span>
-                  <span class="ta-idx">v2026.11.15 <span class="sep">·</span> <span class="ok">정상</span> · 623af69</span>
+                  <span class="ta-idx">v2026.11.15 <span class="sep">·</span> <span class="ok">정상</span> · a1b2c3d</span>
                   <span class="ta-run">승인 케이스 실행</span>
                 </div>
                 <div class="ta-mb">
@@ -323,10 +323,10 @@
                   <span class="mchip">경계값</span>
                 </div>
                 <p class="case-title">미수 A 그룹 — 그룹 정산 후 계산 금액이 0원</p>
-                <p class="case-sub">기대값 calc_amt = 0 · 비교 규칙 partialMatch(3필드) · 앵커 SettlementGroupService#calculate</p>
+                <p class="case-sub">기대값 계산 금액 = 0 · 비교 규칙 3필드 부분 일치 · 앵커 그룹 정산 서비스 · 계산 메소드</p>
                 <div class="step-badges">
                   <span class="sb sql">SQL 조회 · 2단계</span>
-                  <span class="sb batch">배치 호출 · IF022</span>
+                  <span class="sb batch">배치 호출 · 정산 배치</span>
                   <span class="sb">HTTP · 사내 정산 API</span>
                 </div>
               </div>
@@ -343,7 +343,7 @@
                 <div class="c-row"><span>골든 비교</span><span class="badge ok">3필드 일치</span></div>
                 <div class="c-row"><span>실행 모드</span><span class="badge ok">실제 실행 · direct</span></div>
                 <div class="c-row"><span>모의 / 실제</span><span class="badge info">actual (모의 아님)</span></div>
-                <div class="c-row"><span>실행에 박힌 기준</span><span class="badge muted">commit 623af69 · 코드맵 v2026.11.15</span></div>
+                <div class="c-row"><span>실행에 박힌 기준</span><span class="badge muted">commit a1b2c3d · 코드맵 v2026.11.15</span></div>
               </div>
 
               <div class="sec-head"><span class="no">판정</span>실패 원인과 자가 치유 판정</div>
@@ -396,12 +396,12 @@
               <div class="bp-card" data-label="S5 토폴로지">
                 <h4>아키텍처 토폴로지<span class="mchip">코드 앵커 3</span></h4>
                 <div class="topo">
-                  <span class="n"><b>화면</b>STACBL00600</span><span class="a">→</span>
+                  <span class="n"><b>화면</b>그룹 정산 화면</span><span class="a">→</span>
                   <span class="n is-sel"><b>사내 정산 API</b>group/calc</span><span class="a">→</span>
                   <span class="n"><b>정산 개발 DB</b>조회 전용</span>
                 </div>
                 <div class="topo" style="margin-top:5px">
-                  <span class="n"><b>배치 스케줄러</b>IF022</span><span class="a">→</span>
+                  <span class="n"><b>배치 스케줄러</b>정산 배치</span><span class="a">→</span>
                   <span class="n"><b>정산 개발 DB</b>그룹 정산 반영</span>
                 </div>
               </div>
@@ -410,8 +410,8 @@
                 <h4>데이터 시퀀스</h4>
                 <ul class="sq">
                   <li><b>① 실행</b>승인 케이스 TC-07 — 실행 트리거 확인</li>
-                  <li><b>② 조회</b>정산 개발 DB · group_settlement (SELECT)</li>
-                  <li><b>③ 비교</b>기대값 calc_amt = 0 · partialMatch 3필드</li>
+                  <li><b>② 조회</b>정산 개발 DB · 그룹 정산 테이블 (SELECT)</li>
+                  <li><b>③ 비교</b>기대값 계산 금액 = 0 · 3필드 부분 일치</li>
                   <li><b>④ 기록</b>판정 · 실패 분류 · 자가 치유 경로</li>
                 </ul>
               </div>
@@ -421,9 +421,9 @@
                 <table class="bp-cols">
                   <thead><tr><th>컬럼</th><th>Before</th><th>After</th></tr></thead>
                   <tbody>
-                    <tr><td>group_no</td><td>—</td><td class="after">G-20261115-07</td></tr>
-                    <tr><td>calc_amt</td><td>null</td><td class="after">0</td></tr>
-                    <tr><td>settle_status</td><td>null</td><td class="after">계산완료</td></tr>
+                    <tr><td>그룹 번호</td><td>—</td><td class="after">G-0007</td></tr>
+                    <tr><td>계산 금액</td><td>null</td><td class="after">0</td></tr>
+                    <tr><td>정산 상태</td><td>null</td><td class="after">계산완료</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -542,7 +542,7 @@
           <g class="node" data-node="n7b" data-chip="⑦b 배치 스케줄러 실행" data-screens="S4" data-label="흐름 7b · 배치 스케줄러 실행">
             <rect class="n-rect" x="216" y="1106" width="160" height="104" rx="12"/>
             <text x="232" y="1132" class="n-t">배치 스케줄러</text>
-            <text x="232" y="1150" class="n-s">IF022 · 완료 대기</text>
+            <text x="232" y="1150" class="n-s">정산 배치 · 완료 대기</text>
             <text x="232" y="1168" class="n-s">차단 시간대 회피</text>
             <rect x="342" y="1116" width="24" height="15" rx="7.5" class="n-no2"/><text x="354" y="1127" class="n-num2">7b</text>
           </g>
@@ -636,6 +636,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js?v=2026-11-15.v13"></script>
+<script src="app.js?v=2026-11-15.v14"></script>
 </body>
 </html>
