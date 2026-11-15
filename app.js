@@ -176,6 +176,7 @@
     var pend = pendingPins().length;
     $('#pendingLabel').textContent = pend ? '제출 전 ' + pend + '건' : (S.pins.length ? '모두 제출됨' : '제출 전 0건');
     $('#abCount').textContent = '의견 ' + S.pins.length + '건' + (pend ? ' · 제출 전 ' + pend + '건' : '');
+    syncPanelCount();
     $('#submitBtn').disabled = pend === 0 || S.submitting;
     $('#submitBtn').textContent = S.submitting ? '보내는 중…' : (pend ? '의견 ' + pend + '건 제출' : '의견 제출');
     $('#reviewIdText').textContent = S.reviewId;
@@ -452,6 +453,7 @@
       ul.appendChild(li);
     });
     var answered = ops.filter(function (o) { return o.replies.length; }).length;
+    syncPanelCount();
     var cnt = $('#replyCount');
     if (cnt) cnt.textContent = answered;
     var st = $('#serverStatus');
@@ -490,6 +492,14 @@
     var mine = $('#viewMine'), srv = $('#viewServer');
     if (mine) mine.hidden = S.panelView !== 'mine';
     if (srv) srv.hidden = S.panelView !== 'server';
+    var title = $('#panelTitle');
+    if (title) title.textContent = S.panelView === 'server' ? '☁ 제출 기록' : '📌 남긴 의견';
+    syncPanelCount();
+  }
+
+  function syncPanelCount() {
+    var el = $('#pinTotal');
+    if (el) el.textContent = S.panelView === 'server' ? (S.serverCount || 0) : S.pins.length;
   }
 
   function openPanel() {
