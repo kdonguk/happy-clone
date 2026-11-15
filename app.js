@@ -266,11 +266,11 @@
     var vw = flowview.clientWidth, vh = flowview.clientHeight;
     var sw = stageEls.flow.offsetWidth || 436;
     var sh = stageEls.flow.offsetHeight || 1166;
-    var z = Math.min((vw - 6) / sw, (vh - 6) / sh, 1);
-    z = Math.max(z, 0.32);
+    var z = Math.min((vw - 10) / sw, 1.45);
+    z = Math.max(z, Math.min((vh - 10) / sh, 1));
     S.zoom = z;
     S.tx = (vw - sw * z) / 2;
-    S.ty = Math.max((vh - sh * z) / 2, 8);
+    S.ty = 6;
     applyFlow();
   }
 
