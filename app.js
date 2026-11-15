@@ -448,7 +448,7 @@
     document.body.classList.toggle('is-split', on);
     var btn = $('#splitBtn');
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.textContent = on ? '⇹ 나란히 보기 끄기' : '⇹ 나란히 보기';
+    btn.title = on ? '나란히 보기 끄기 (탭 하나씩 보기)' : '화면 시안과 서버 흐름도를 나란히 보기';
     syncChrome();
     updateHint();
     if (on) {
@@ -471,7 +471,7 @@
       return;
     }
     if (S.split) h.innerHTML = '나란히 보기입니다. <b>🔗 서버 흐름</b> 칩을 누르면 오른쪽 해당 단계가, <b>🖥️ 화면</b> 칩을 누르면 왼쪽 해당 화면이 강조됩니다.';
-    else if (S.tab === 'flow') h.innerHTML = '이동 모드입니다. 끌거나 휠로 옮기고, 두 손가락·Ctrl+휠로 확대·축소하세요. <b>🖥️ 화면</b> 칩을 누르면 그 화면으로 이동합니다.';
+    else if (S.tab === 'flow') h.innerHTML = '이동 모드입니다. 끌어서 옮기고, 두 손가락(PC는 Ctrl+휠)으로 확대·축소하세요. <b>🖥️ 화면</b> 칩을 누르면 그 화면으로 이동합니다.';
     else h.innerHTML = '이동 모드입니다. <b>🔗 서버 흐름</b> 칩을 누르면 서버 흐름도 해당 단계로 이동합니다. 핀은 <b>📌 핀 찍기</b>에서.';
   }
 

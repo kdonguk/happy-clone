@@ -78,7 +78,7 @@ button{font:inherit;color:inherit}
 }
 .tab-count:empty,.tab-count[data-zero="1"]{display:none}
 .split-btn{
-  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
   border:1px solid #b9cdf7;background:#fff;color:var(--accent-ink);
   border-radius:12px;padding:0 13px;min-height:46px;font-size:13px;font-weight:700;
 }
