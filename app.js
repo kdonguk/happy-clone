@@ -96,8 +96,11 @@
 
   function anchorEl(label) {
     if (!label) return null;
-    var sel = '[data-label="' + label.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]';
-    try { return document.querySelector(sel); } catch (e) { return null; }
+    var els = document.querySelectorAll('[data-label]');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].dataset.label === label) return els[i];
+    }
+    return null;
   }
 
   function bindLegacyAnchors() {
@@ -105,11 +108,12 @@
     S.pins.forEach(function (p) {
       if (p.v === 2) return;
       var label = LABEL_ALIAS[p.label] || p.label;
+      if (!label) { p.v = 2; return; }        // 라벨이 없으면 좌표 그대로
       var el = anchorEl(label);
-      p.v = 2;
-      if (!el) return;
+      if (!el) return;                        // 판이 아직 안 보일 수 있음 → 다음에 다시
       p.label = label;
       p.anchor = label;
+      p.v = 2;
       changed = true;
     });
     if (changed) save();
@@ -953,6 +957,13 @@
     focusFlow: focusFlow,
     focusScreen: focusScreen,
     audit: linkAudit,
+    reanchor: function () {           // 레이아웃이 바뀐 뒤 핀을 요소에 다시 붙인다
+      S.pins.forEach(function (p) { p.v = 0; });
+      bindLegacyAnchors();
+      renderPins();
+      save();
+      return S.pins.map(function (p) { return { no: p.no, x: +p.x.toFixed(3), y: +p.y.toFixed(3), anchor: p.anchor || null }; });
+    },
     state: S
   };
 })();
