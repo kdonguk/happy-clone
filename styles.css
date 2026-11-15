@@ -52,10 +52,12 @@ button{font:inherit;color:inherit}
 .review-chip .dot{width:6px;height:6px;border-radius:50%;background:#34d399}
 
 /* ── 탭 ───────────────────────────────── */
+.tabs-row{
+  flex:0 0 auto; z-index:25; display:flex; align-items:stretch; gap:8px;
+  padding:8px 10px; background:var(--bg); border-bottom:1px solid var(--line);
+}
 .tabs{
-  flex:0 0 auto; z-index:25;
-  display:flex; gap:6px; padding:8px 10px;
-  background:var(--bg); border-bottom:1px solid var(--line);
+  flex:1 1 auto; display:flex; gap:6px;
 }
 .tab{
   flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px;
@@ -75,6 +77,13 @@ button{font:inherit;color:inherit}
   border-radius:999px;padding:1px 6px;min-width:18px;
 }
 .tab-count:empty,.tab-count[data-zero="1"]{display:none}
+.split-btn{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+  border:1px solid #b9cdf7;background:#fff;color:var(--accent-ink);
+  border-radius:12px;padding:0 13px;min-height:46px;font-size:13px;font-weight:700;
+}
+.split-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.split-btn[hidden]{display:none}
 
 /* ── 리뷰 ID 편집 ─────────────────────── */
 .rid-editor{
@@ -115,8 +124,14 @@ button{font:inherit;color:inherit}
 .hint b{color:var(--accent-ink)}
 
 /* ── 뷰포트 ───────────────────────────── */
+.workspace{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .viewpane{display:none;flex:1 1 auto;min-height:0;position:relative}
 .viewpane.is-on{display:block}
+body.is-split .workspace{flex-direction:row}
+body.is-split #pane-screen{flex:1.02 1 0;min-width:0;border-right:1px solid var(--line)}
+body.is-split #pane-flow{flex:1 1 0;min-width:0}
+body.is-split .viewpane{display:block}
+body.is-split .viewpane.is-on{display:block}
 
 .scroller{
   overflow-y:auto; overflow-x:hidden;
@@ -126,7 +141,47 @@ button{font:inherit;color:inherit}
 }
 .stage{position:relative;width:100%;max-width:720px;margin:0 auto}
 .stage-screens{padding-bottom:8px}
-.stage-pins{position:absolute;inset:0;pointer-events:none}
+.stage-pins{position:absolute;inset:0;pointer-events:none;z-index:6}
+
+/* ── 화면 ↔ 서버 연결 칩 ───────────────── */
+.xlink{
+  display:inline-flex;align-items:center;gap:4px;max-width:100%;
+  border:1px solid #cddcfb;background:#eef4ff;color:var(--accent-ink);
+  border-radius:999px;padding:4px 9px;min-height:27px;
+  font-size:11px;font-weight:700;line-height:1.25;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.xlink b{font-weight:800}
+.xlink:active{background:#dde9ff;border-color:#a9c6f9}
+.xlink-ic{font-size:10.5px;opacity:.9}
+.xlink-bar{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:8px 12px 9px;border-top:1px dashed #dbe2ef;background:#fbfcff;
+}
+.xlink-lab{
+  font-size:10px;font-weight:800;color:#7b8794;letter-spacing:.02em;
+  white-space:nowrap;padding-right:2px;
+}
+.xlink-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.xlink-row.inline{margin:-2px 0 9px}
+.xlink-layer{position:absolute;inset:0;pointer-events:none;z-index:3}
+.flow-row{position:absolute;display:flex;gap:6px;flex-wrap:nowrap;pointer-events:none}
+.flow-row .xlink{
+  pointer-events:auto;min-height:0;height:25px;padding:0 9px;font-size:10px;border-radius:8px;
+  background:#f1f6ff;box-shadow:0 1px 2px rgba(29,78,216,.08);
+}
+.flow-row.is-compact .xlink{padding:0 8px;font-size:10px}
+
+/* ── 연결 강조 ────────────────────────── */
+@keyframes nodeHit{0%,100%{stroke:#2f6fed;stroke-width:2.6}45%{stroke:#a9c6f9;stroke-width:4.2}}
+.node.is-hit{filter:drop-shadow(0 0 7px rgba(47,111,237,.55))}
+.node.is-hit .n-rect{stroke:#2f6fed;animation:nodeHit 1s ease-in-out 2}
+@keyframes cardHit{0%,100%{box-shadow:0 0 0 3px rgba(47,111,237,.16)}45%{box-shadow:0 0 0 6px rgba(47,111,237,.5)}}
+.screen.is-hit{outline:3px solid #2f6fed;outline-offset:2px;animation:cardHit 1s ease-in-out 2}
+.xlink-row.is-hit,.row-between.is-hit,.safety.is-hit,.steps.is-hit,.checks.is-hit{
+  outline:2.5px solid rgba(47,111,237,.7);outline-offset:3px;border-radius:10px;
+}
+.flow-row.is-hit .xlink{background:#2f6fed;border-color:#2f6fed;color:#fff}
 
 /* 핀 */
 .pin{
@@ -180,6 +235,11 @@ button{font:inherit;color:inherit}
 .win-tag{
   margin-left:auto;font-size:10.5px;font-weight:700;color:#475569;
   background:#eef2f7;border-radius:999px;padding:2px 8px;
+}
+.scr-no{
+  margin-left:6px;flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:.02em;
+  color:#1d4ed8;background:#e8f0fe;border-radius:6px;padding:2px 7px;
+  font-variant-numeric:tabular-nums;
 }
 .win-body{display:flex;min-height:0}
 .side{
@@ -278,6 +338,7 @@ button{font:inherit;color:inherit}
 .node .n-s{font-size:11px;fill:#6b7a90}
 .node .n-no{fill:#eef2f7;stroke:none}
 .node .n-num{font-size:10px;font-weight:800;fill:#64748b;text-anchor:middle}
+.node .n-num.is-two{font-size:8.5px}
 .node-safety rect{fill:#fffdf7;stroke:#f2dfb4}
 .pill rect{fill:#f4f6fa;stroke:#e2e8f2;stroke-width:1}
 .pill-warn rect{fill:#fef4e6;stroke:#f6dcaa}
@@ -410,4 +471,12 @@ button{font:inherit;color:inherit}
   body{max-width:860px;margin:0 auto;box-shadow:0 0 0 1px var(--line),0 24px 60px -30px rgba(15,23,42,.4)}
   .panel{border-radius:16px 16px 0 0}
   .stage{max-width:720px}
+}
+
+/* ── 데스크톱 : 나란히 보기 ─────────────── */
+@media (min-width:1024px){
+  body{max-width:1560px}
+  body.is-split .workspace{gap:0}
+  body.is-split .scroller{padding:4px 12px 18px}
+  body.is-split .stage{max-width:680px}
 }

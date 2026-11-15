@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
 <meta name="theme-color" content="#111827">
+<meta name="rb-version" content="2026-11-15.v3-link">
 <title>TestAnchor 핀 리뷰 보드</title>
-<meta name="description" content="화면 시안과 서버 흐름도에 핀을 꽂아 한 줄 의견을 남기는 리뷰 보드">
+<meta name="description" content="화면 시안과 서버 흐름도를 서로 연결해 보는 핀 리뷰 보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111827'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23fbbf24'%3E%F0%9F%93%8C%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,7 +18,7 @@
       <span class="brand-mark">📌</span>
       <div>
         <h1>핀 리뷰 보드</h1>
-        <p class="brand-sub">화면 시안 · 서버 흐름도에 핀을 꽂아 의견을 남깁니다</p>
+        <p class="brand-sub">화면 시안 ↔ 서버 흐름도 연결 리뷰</p>
       </div>
     </div>
     <button class="review-chip" id="reviewChip" title="리뷰 ID 바꾸기">
@@ -33,21 +34,24 @@
   <button class="btn" id="ridCancel">취소</button>
 </div>
 
-<nav class="tabs" role="tablist" aria-label="리뷰 탭">
-  <button class="tab is-on" role="tab" data-tab="screen" aria-selected="true">
-    <span class="tab-no">1</span> 화면 시안 <span class="tab-count" data-count="screen">0</span>
-  </button>
-  <button class="tab" role="tab" data-tab="flow" aria-selected="false">
-    <span class="tab-no">2</span> 서버 흐름도 <span class="tab-count" data-count="flow">0</span>
-  </button>
-</nav>
+<div class="tabs-row">
+  <nav class="tabs" role="tablist" aria-label="리뷰 탭">
+    <button class="tab is-on" role="tab" data-tab="screen" aria-selected="true">
+      <span class="tab-no">1</span> 화면 시안 <span class="tab-count" data-count="screen">0</span>
+    </button>
+    <button class="tab" role="tab" data-tab="flow" aria-selected="false">
+      <span class="tab-no">2</span> 서버 흐름도 <span class="tab-count" data-count="flow">0</span>
+    </button>
+  </nav>
+  <button class="split-btn" id="splitBtn" aria-pressed="false" hidden>⇹ 나란히 보기</button>
+</div>
 
 <div class="toolbar">
   <div class="seg" role="group" aria-label="모드">
     <button class="seg-btn is-on" data-mode="move" aria-pressed="true">👆 이동</button>
     <button class="seg-btn" data-mode="pin" aria-pressed="false">📌 핀 찍기</button>
   </div>
-  <div class="zoom" id="zoomBox">
+  <div class="zoom" id="zoomBox" hidden>
     <button class="zbtn" id="zoomOut" aria-label="축소">−</button>
     <button class="zval" id="zoomVal" aria-label="배율 초기화">100%</button>
     <button class="zbtn" id="zoomIn" aria-label="확대">+</button>
@@ -56,232 +60,231 @@
 </div>
 <p class="hint" id="hint">핀을 남기려면 <b>📌 핀 찍기</b>로 바꾸고, 의견을 남길 자리를 톡 누르세요.</p>
 
-<!-- ── 탭 1 : 화면 시안 ───────────────────────────── -->
-<main class="viewpane is-on" id="pane-screen" role="tabpanel">
-  <div class="scroller" id="scroller-screen">
-    <div class="stage stage-screens" data-tab="screen" id="stage-screen">
+<div class="workspace" id="workspace">
 
-      <article class="screen" data-label="S1 실행 대상 선택">
-        <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">새 실행</span></div>
-        <div class="win-body">
-          <aside class="side"><span class="side-item is-on">실행 대상</span><span class="side-item">14단계</span><span class="side-item">검증 결과</span><span class="side-item">산출물</span></aside>
-          <div class="pane">
-            <div class="scr-head" data-label="S1 제목 영역">
-              <h3>실행 대상을 고르세요</h3>
-              <p class="muted">고른 대상에 맞는 안전장치가 자동으로 붙습니다.</p>
-            </div>
-            <div class="targets">
-              <div class="target is-on" data-label="S1 대상 카드 · 저장소 코드맵">
-                <div class="t-head">저장소 코드맵 <span class="badge ok">읽기 전용</span></div>
-                <div class="t-sub">최근 커밋 기준 구조 스캔</div>
+  <!-- ── 탭 1 : 화면 시안 ───────────────────────────── -->
+  <main class="viewpane is-on" id="pane-screen" role="tabpanel">
+    <div class="scroller" id="scroller-screen">
+      <div class="stage stage-screens" data-tab="screen" id="stage-screen">
+
+        <article class="screen" data-screen="S1" data-nodes="n1 n2 n5" data-label="S1 실행 대상 선택">
+          <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">새 실행</span><span class="scr-no">S1</span></div>
+          <div class="win-body">
+            <aside class="side"><span class="side-item is-on">실행 대상</span><span class="side-item">14단계</span><span class="side-item">검증 결과</span><span class="side-item">산출물</span></aside>
+            <div class="pane">
+              <div class="scr-head" data-label="S1 제목 영역">
+                <h3>실행 대상을 고르세요</h3>
+                <p class="muted">고른 대상에 맞는 안전장치가 자동으로 붙습니다.</p>
               </div>
-              <div class="target" data-label="S1 대상 카드 · 개발 DB">
-                <div class="t-head">개발 DB <span class="badge ok">읽기 전용</span></div>
-                <div class="t-sub">SELECT 전용 · WHERE 필수</div>
+              <div class="targets">
+                <div class="target is-on" data-label="S1 대상 카드 · 저장소 코드맵">
+                  <div class="t-head">저장소 코드맵 <span class="badge ok">읽기 전용</span></div>
+                  <div class="t-sub">최근 커밋 기준 구조 스캔</div>
+                </div>
+                <div class="target" data-label="S1 대상 카드 · 정산 개발 DB" data-region="n5a">
+                  <div class="t-head">정산 개발 DB <span class="badge ok">조회만</span></div>
+                  <div class="t-sub">와디즈 정산 개발 서버에서 데이터를 읽어옵니다 (수정 불가)</div>
+                </div>
+                <div class="target" data-label="S1 대상 카드 · 배치 스케줄러" data-region="n5b">
+                  <div class="t-head">배치 스케줄러 <span class="badge warn">쓰기 허용</span></div>
+                  <div class="t-sub">차단 시간대 06:20~08:00</div>
+                </div>
               </div>
-              <div class="target" data-label="S1 대상 카드 · 배치 스케줄러">
-                <div class="t-head">배치 스케줄러 <span class="badge warn">쓰기 허용</span></div>
-                <div class="t-sub">차단 시간대 06:20~08:00</div>
+              <div class="pane-foot"><span class="muted">1 / 14 단계</span><span class="btn primary">다음</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="screen" data-screen="S2" data-nodes="n2 n3 n4" data-label="S2 직접 연결 · 안전 배지">
+          <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">연결</span><span class="scr-no">S2</span></div>
+          <div class="win-body">
+            <aside class="side"><span class="side-item">실행 대상</span><span class="side-item is-on">14단계</span><span class="side-item">검증 결과</span><span class="side-item">산출물</span></aside>
+            <div class="pane">
+              <div class="row-between" data-label="S2 연결 상태 배지" data-region="n2">
+                <h3>직접 연결</h3>
+                <span class="badge ok strong">● 직접 연결 · 읽기 전용</span>
               </div>
+              <div class="safety" data-label="S2 안전장치 목록" data-region="n3 n4">
+                <div class="s-row"><span>allowWrite</span><span class="badge muted">꺼짐</span></div>
+                <div class="s-row"><span>WHERE 절 검사</span><span class="badge ok">켜짐</span></div>
+                <div class="s-row"><span>차단 시간대</span><span class="badge warn">06:20 ~ 08:00</span></div>
+                <div class="s-row"><span>LIVE 키</span><span class="badge danger">거부</span></div>
+              </div>
+              <p class="note" data-label="S2 안내 문구">쓰기 허용은 사람 승인 뒤에만 열립니다. 위반하면 실행 대신 사유를 돌려줍니다.</p>
             </div>
-            <div class="pane-foot"><span class="muted">1 / 14 단계</span><span class="btn primary">다음</span></div>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <article class="screen" data-label="S2 직접 연결 · 안전 배지">
-        <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">연결</span></div>
-        <div class="win-body">
-          <aside class="side"><span class="side-item">실행 대상</span><span class="side-item is-on">14단계</span><span class="side-item">검증 결과</span><span class="side-item">산출물</span></aside>
-          <div class="pane">
-            <div class="row-between" data-label="S2 연결 상태 배지">
-              <h3>직접 연결</h3>
-              <span class="badge ok strong">● 직접 연결 · 읽기 전용</span>
+        <article class="screen" data-screen="S3" data-nodes="n5 n6 n7" data-label="S3 14단계 진행 상태">
+          <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">진행 중</span><span class="scr-no">S3</span></div>
+          <div class="win-body">
+            <aside class="side"><span class="side-item">실행 대상</span><span class="side-item is-on">14단계</span><span class="side-item">검증 결과</span><span class="side-item">산출물</span></aside>
+            <div class="pane">
+              <div class="row-between" data-label="S3 진행 헤더">
+                <h3>14단계 진행</h3>
+                <span class="badge info">● 실시간 · 1초</span>
+              </div>
+              <div class="progress" data-label="S3 진행률"><div class="bar" style="--p:64%"></div><span class="pv">9 / 14</span></div>
+              <ol class="steps" data-label="S3 단계 목록" data-region="n5 n6 n7">
+                <li class="done">요청 접수</li><li class="done">대상 확인</li><li class="done">안전장치 검사</li><li class="done">읽기 실행</li>
+                <li class="done">결과 계약 검증</li><li class="done">골든 비교</li><li class="done">실패 분류</li><li class="done">자가 치유</li>
+                <li class="now">배치 실행</li><li>영향 범위</li><li>파일 영속화</li><li>사람 승인</li><li>보고서</li><li>마무리</li>
+              </ol>
+              <p class="note">사람 승인 3곳 · 지금 1곳에서 기다리는 중</p>
             </div>
-            <div class="safety" data-label="S2 안전장치 목록">
-              <div class="s-row"><span>allowWrite</span><span class="badge muted">꺼짐</span></div>
-              <div class="s-row"><span>WHERE 절 검사</span><span class="badge ok">켜짐</span></div>
-              <div class="s-row"><span>차단 시간대</span><span class="badge warn">06:20 ~ 08:00</span></div>
-              <div class="s-row"><span>LIVE 키</span><span class="badge danger">거부</span></div>
-            </div>
-            <p class="note" data-label="S2 안내 문구">쓰기 허용은 사람 승인 뒤에만 열립니다. 위반하면 실행 대신 사유를 돌려줍니다.</p>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <article class="screen" data-label="S3 14단계 진행 상태">
-        <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">진행 중</span></div>
-        <div class="win-body">
-          <aside class="side"><span class="side-item">실행 대상</span><span class="side-item is-on">14단계</span><span class="side-item">검증 결과</span><span class="side-item">산출물</span></aside>
-          <div class="pane">
-            <div class="row-between" data-label="S3 진행 헤더">
-              <h3>14단계 진행</h3>
-              <span class="badge info">● 실시간 · 1초</span>
+        <article class="screen" data-screen="S4" data-nodes="n6 n7 n8" data-label="S4 검증 결과 요약">
+          <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">완료</span><span class="scr-no">S4</span></div>
+          <div class="win-body">
+            <aside class="side"><span class="side-item">실행 대상</span><span class="side-item">14단계</span><span class="side-item is-on">검증 결과</span><span class="side-item">산출물</span></aside>
+            <div class="pane">
+              <div class="scr-head" data-label="S4 제목 영역">
+                <h3>검증 결과</h3>
+                <p class="muted">결과 계약 · 골든 비교까지 모두 통과했습니다.</p>
+              </div>
+              <div class="kpis" data-label="S4 요약 수치">
+                <div class="kpi"><b>265</b><span>통과 / 265</span></div>
+                <div class="kpi"><b>0</b><span>실패</span></div>
+                <div class="kpi"><b>2</b><span>자가 치유</span></div>
+              </div>
+              <div class="checks" data-label="S4 점검 행">
+                <div class="c-row"><span>결과 계약</span><span class="badge ok">일치</span></div>
+                <div class="c-row"><span>파일 영속화</span><span class="badge ok">2건 저장</span></div>
+                <div class="c-row"><span>차단 시간대</span><span class="badge ok">회피 확인</span></div>
+              </div>
+              <div class="pane-foot"><span class="muted">4분 12초</span><span class="btn">보고서 내려받기</span></div>
             </div>
-            <div class="progress" data-label="S3 진행률"><div class="bar" style="--p:64%"></div><span class="pv">9 / 14</span></div>
-            <ol class="steps" data-label="S3 단계 목록">
-              <li class="done">요청 접수</li><li class="done">대상 확인</li><li class="done">안전장치 검사</li><li class="done">읽기 실행</li>
-              <li class="done">결과 계약 검증</li><li class="done">골든 비교</li><li class="done">실패 분류</li><li class="done">자가 치유</li>
-              <li class="now">배치 실행</li><li>영향 범위</li><li>파일 영속화</li><li>사람 승인</li><li>보고서</li><li>마무리</li>
-            </ol>
-            <p class="note">사람 승인 3곳 · 지금 1곳에서 기다리는 중</p>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <article class="screen" data-label="S4 검증 결과 요약">
-        <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="win-title">TestAnchor Studio</span><span class="win-tag">완료</span></div>
-        <div class="win-body">
-          <aside class="side"><span class="side-item">실행 대상</span><span class="side-item">14단계</span><span class="side-item is-on">검증 결과</span><span class="side-item">산출물</span></aside>
-          <div class="pane">
-            <div class="scr-head" data-label="S4 제목 영역">
-              <h3>검증 결과</h3>
-              <p class="muted">결과 계약 · 골든 비교까지 모두 통과했습니다.</p>
-            </div>
-            <div class="kpis" data-label="S4 요약 수치">
-              <div class="kpi"><b>265</b><span>통과 / 265</span></div>
-              <div class="kpi"><b>0</b><span>실패</span></div>
-              <div class="kpi"><b>2</b><span>자가 치유</span></div>
-            </div>
-            <div class="checks" data-label="S4 점검 행">
-              <div class="c-row"><span>결과 계약</span><span class="badge ok">일치</span></div>
-              <div class="c-row"><span>파일 영속화</span><span class="badge ok">2건 저장</span></div>
-              <div class="c-row"><span>차단 시간대</span><span class="badge ok">회피 확인</span></div>
-            </div>
-            <div class="pane-foot"><span class="muted">4분 12초</span><span class="btn">보고서 내려받기</span></div>
-          </div>
-        </div>
-      </article>
-
-      <div class="stage-pins" id="pins-screen"></div>
-    </div>
-  </div>
-</main>
-
-<!-- ── 탭 2 : 서버 흐름도 ─────────────────────────── -->
-<main class="viewpane" id="pane-flow" role="tabpanel">
-  <div class="flowview" id="flowview">
-    <div class="flowwrap" id="flowwrap">
-      <div class="stage stage-flow" data-tab="flow" id="stage-flow">
-        <svg id="flowSvg" viewBox="0 0 420 1150" width="420" height="1150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="서버 동작 흐름도">
-          <defs>
-            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0,1 L9,5 L0,9 z" fill="#94a3b8"/>
-            </marker>
-            <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0,1 L9,5 L0,9 z" fill="#e11d48"/>
-            </marker>
-            <marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0,1 L9,5 L0,9 z" fill="#b45309"/>
-            </marker>
-          </defs>
-
-          <line x1="22" y1="40" x2="22" y2="1078" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
-
-          <g class="node" data-label="흐름 1 · 요청 접수">
-            <rect x="44" y="36" width="332" height="64" rx="14"/>
-            <text x="62" y="64" class="n-t">요청 접수</text>
-            <text x="62" y="84" class="n-s">POST /runs · 실행 대상 · 실행 모드</text>
-            <circle cx="22" cy="68" r="11" class="n-no"/><text x="22" y="72" class="n-num">1</text>
-          </g>
-          <line x1="210" y1="100" x2="210" y2="128" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
-
-          <g class="node" data-label="흐름 2 · 요청 스키마 검증">
-            <rect x="44" y="130" width="332" height="64" rx="14"/>
-            <text x="62" y="158" class="n-t">요청 스키마 검증</text>
-            <text x="62" y="178" class="n-s">필수 값 · 허용 값 · 모드 일치</text>
-            <circle cx="22" cy="162" r="11" class="n-no"/><text x="22" y="166" class="n-num">2</text>
-          </g>
-          <line x1="210" y1="194" x2="210" y2="222" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
-
-          <g class="node node-safety" data-label="흐름 3 · 안전장치 검사">
-            <rect x="44" y="224" width="332" height="166" rx="14"/>
-            <text x="62" y="252" class="n-t">안전장치 검사</text>
-            <text x="62" y="272" class="n-s">하나라도 걸리면 실행하지 않고 사유를 돌려줍니다</text>
-            <g class="pill"><rect x="62" y="286" width="296" height="30" rx="8"/><text x="76" y="306" class="p-t">allowWrite · 기본 꺼짐</text></g>
-            <g class="pill pill-warn"><rect x="62" y="322" width="296" height="30" rx="8"/><text x="76" y="342" class="p-t">차단 시간대 06:20 ~ 08:00 (+10분)</text></g>
-            <g class="pill"><rect x="62" y="358" width="296" height="30" rx="8"/><text x="76" y="378" class="p-t">WHERE 절 누락 · 쓰기 대상 검사</text></g>
-            <circle cx="22" cy="256" r="11" class="n-no"/><text x="22" y="260" class="n-num">3</text>
-          </g>
-
-          <path d="M110,390 L110,414" stroke="#e11d48" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arR)"/>
-          <text x="120" y="408" class="e-l" fill="#be123c">위반</text>
-          <g class="node node-reject" data-label="흐름 · 거절 사유 반환">
-            <rect x="44" y="416" width="200" height="58" rx="12"/>
-            <text x="60" y="440" class="n-t">거절 · 사유 반환</text>
-            <text x="60" y="459" class="n-s">어느 규칙에 걸렸는지 그대로</text>
-          </g>
-
-          <path d="M300,390 L300,470 L210,470 L210,490" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
-          <text x="252" y="484" class="e-l">통과</text>
-
-          <g class="node" data-label="흐름 4 · 실행 분기">
-            <rect x="44" y="492" width="332" height="58" rx="14"/>
-            <text x="62" y="516" class="n-t">실행 분기</text>
-            <text x="62" y="535" class="n-s">읽기 / 배치 / 둘 다</text>
-            <circle cx="22" cy="521" r="11" class="n-no"/><text x="22" y="525" class="n-num">4</text>
-          </g>
-          <path d="M124,550 L124,582" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
-          <path d="M296,550 L296,582" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
-
-          <g class="node" data-label="흐름 5a · 개발 DB 읽기">
-            <rect x="44" y="584" width="160" height="86" rx="12"/>
-            <text x="60" y="610" class="n-t">개발 DB 읽기</text>
-            <text x="60" y="630" class="n-s">SELECT 전용</text>
-            <text x="60" y="648" class="n-s">WHERE 필수</text>
-            <circle cx="22" cy="608" r="11" class="n-no"/><text x="22" y="612" class="n-num">5</text>
-          </g>
-          <g class="node" data-label="흐름 5b · 배치 실행">
-            <rect x="216" y="584" width="160" height="86" rx="12"/>
-            <text x="232" y="610" class="n-t">배치 실행</text>
-            <text x="232" y="630" class="n-s">스케줄러 호출</text>
-            <text x="232" y="648" class="n-s">차단 시간대 회피</text>
-          </g>
-
-          <path d="M124,670 L124,700 L210,700 L210,714" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
-          <path d="M296,670 L296,700 L214,700" stroke="#94a3b8" stroke-width="2" fill="none"/>
-
-          <g class="node" data-label="흐름 6 · 결과 계약 검증">
-            <rect x="44" y="716" width="332" height="84" rx="14"/>
-            <text x="62" y="744" class="n-t">결과 계약 검증</text>
-            <text x="62" y="764" class="n-s">스키마 일치 · 건수 일치 · 골든 비교</text>
-            <text x="62" y="782" class="n-s">모의/실제 배지로 구분해 표시</text>
-            <circle cx="22" cy="750" r="11" class="n-no"/><text x="22" y="754" class="n-num">6</text>
-          </g>
-
-          <path d="M124,800 L124,928" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
-          <text x="132" y="880" class="e-l">통과</text>
-
-          <path d="M300,800 L300,832" stroke="#b45309" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arA)"/>
-          <text x="308" y="822" class="e-l" fill="#b45309">실패</text>
-          <g class="node node-heal" data-label="흐름 7 · 자가 치유 루프">
-            <rect x="216" y="834" width="160" height="70" rx="12"/>
-            <text x="232" y="860" class="n-t">자가 치유</text>
-            <text x="232" y="879" class="n-s">실패 분류 → 재시도</text>
-            <text x="232" y="895" class="n-s">오분류 차단</text>
-          </g>
-          <path d="M376,869 L396,869 L396,627 L380,627" stroke="#b45309" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#arA)"/>
-
-          <g class="node" data-label="흐름 8 · 파일 영속화">
-            <rect x="44" y="930" width="332" height="72" rx="14"/>
-            <text x="62" y="958" class="n-t">파일 영속화</text>
-            <text x="62" y="978" class="n-s">JSON · MD · 1초 하트비트 flush</text>
-            <circle cx="22" cy="964" r="11" class="n-no"/><text x="22" y="968" class="n-num">7</text>
-          </g>
-          <line x1="210" y1="1002" x2="210" y2="1028" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
-
-          <g class="node node-done" data-label="흐름 9 · 보고 · 응답">
-            <rect x="44" y="1030" width="332" height="66" rx="14"/>
-            <text x="62" y="1058" class="n-t">보고 · 응답</text>
-            <text x="62" y="1078" class="n-s">14단계 요약 · 산출물 경로 · 실패 사유</text>
-            <circle cx="22" cy="1062" r="11" class="n-no"/><text x="22" y="1066" class="n-num">8</text>
-          </g>
-        </svg>
-        <div class="stage-pins" id="pins-flow"></div>
+        <div class="stage-pins" id="pins-screen"></div>
       </div>
     </div>
-  </div>
-</main>
+  </main>
+
+  <!-- ── 탭 2 : 서버 흐름도 ─────────────────────────── -->
+  <main class="viewpane" id="pane-flow" role="tabpanel">
+    <div class="flowview" id="flowview">
+      <div class="flowwrap" id="flowwrap">
+        <div class="stage stage-flow" data-tab="flow" id="stage-flow">
+<!--FLOW-SVG:START-->
+          <svg id="flowSvg" viewBox="0 0 420 1356" width="420" height="1356" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="서버 동작 흐름도">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,1 L9,5 L0,9 z" fill="#94a3b8"/>
+              </marker>
+              <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,1 L9,5 L0,9 z" fill="#e11d48"/>
+              </marker>
+              <marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,1 L9,5 L0,9 z" fill="#b45309"/>
+              </marker>
+            </defs>
+
+            <line x1="22" y1="40" x2="22" y2="1202" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
+
+            <line x1="210" y1="114" x2="210" y2="142" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+            <line x1="210" y1="230" x2="210" y2="258" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+            <line x1="110" y1="462" x2="110" y2="494" stroke="#e11d48" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arR)"/>
+            <text x="120" y="486" class="e-l" fill="#be123c">위반</text>
+            <line x1="306" y1="462" x2="306" y2="610" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+            <text x="314" y="598" class="e-l">통과</text>
+            <line x1="124" y1="698" x2="124" y2="726" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+            <line x1="296" y1="698" x2="296" y2="726" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+            <path d="M124,832 L124,854 L210,854 L210,850" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+            <path d="M296,832 L296,854 L214,854" stroke="#94a3b8" stroke-width="2" fill="none"/>
+            <line x1="124" y1="956" x2="124" y2="1126" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+            <text x="132" y="996" class="e-l">통과</text>
+            <line x1="300" y1="956" x2="300" y2="988" stroke="#b45309" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arA)"/>
+            <text x="308" y="974" class="e-l" fill="#b45309">실패</text>
+            <path d="M376,1042 L402,1042 L402,820 L382,820" stroke="#b45309" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#arA)"/>
+            <line x1="210" y1="1214" x2="210" y2="1242" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+          <g class="node" data-node="n1" data-chip="① 요청 접수" data-screens="S1" data-label="흐름 1 · 요청 접수">
+            <rect class="n-rect" x="44" y="28" width="332" height="86" rx="14"/>
+            <text x="62" y="54" class="n-t">요청 접수</text>
+            <text x="62" y="72" class="n-s">POST /runs · 실행 대상 · 실행 모드</text>
+            <circle cx="22" cy="56" r="11" class="n-no"/><text x="22" y="59.5" class="n-num">1</text>
+          </g>
+          <g class="node" data-node="n2" data-chip="② 요청 스키마 검증" data-screens="S1 S2" data-label="흐름 2 · 요청 스키마 검증">
+            <rect class="n-rect" x="44" y="144" width="332" height="86" rx="14"/>
+            <text x="62" y="170" class="n-t">요청 스키마 검증</text>
+            <text x="62" y="188" class="n-s">필수 값 · 허용 값 · 모드 일치</text>
+            <circle cx="22" cy="172" r="11" class="n-no"/><text x="22" y="175.5" class="n-num">2</text>
+          </g>
+          <g class="node node-safety" data-node="n3" data-chip="③ 안전장치 검사" data-screens="S2" data-label="흐름 3 · 안전장치 검사">
+            <rect class="n-rect" x="44" y="260" width="332" height="202" rx="14"/>
+            <text x="62" y="286" class="n-t">안전장치 검사</text>
+            <text x="62" y="304" class="n-s">하나라도 걸리면 실행하지 않고 사유를 돌려줍니다</text>
+            <g class="pill"><rect x="62" y="314" width="296" height="30" rx="8"/><text x="76" y="334" class="p-t">allowWrite · 기본 꺼짐</text></g>
+            <g class="pill pill-warn"><rect x="62" y="352" width="296" height="30" rx="8"/><text x="76" y="372" class="p-t">차단 시간대 06:20 ~ 08:00 (+10분)</text></g>
+            <g class="pill"><rect x="62" y="390" width="296" height="30" rx="8"/><text x="76" y="410" class="p-t">WHERE 절 누락 · 쓰기 대상 검사</text></g>
+            <circle cx="22" cy="288" r="11" class="n-no"/><text x="22" y="291.5" class="n-num">3</text>
+          </g>
+          <g class="node node-reject" data-node="n4" data-chip="④ 거절 · 사유 반환" data-screens="S2" data-label="흐름 4 · 거절 사유 반환">
+            <rect class="n-rect" x="44" y="496" width="200" height="86" rx="12"/>
+            <text x="60" y="522" class="n-t">거절 · 사유 반환</text>
+            <text x="60" y="540" class="n-s">어느 규칙에 걸렸는지 그대로</text>
+            <circle cx="22" cy="524" r="11" class="n-no"/><text x="22" y="527.5" class="n-num">4</text>
+          </g>
+          <g class="node" data-node="n5" data-chip="⑤ 실행 분기" data-screens="S1 S3" data-label="흐름 5 · 실행 분기">
+            <rect class="n-rect" x="44" y="612" width="332" height="86" rx="14"/>
+            <text x="62" y="638" class="n-t">실행 분기</text>
+            <text x="62" y="656" class="n-s">읽기 / 배치 / 둘 다</text>
+            <circle cx="22" cy="640" r="11" class="n-no"/><text x="22" y="643.5" class="n-num">5</text>
+          </g>
+          <g class="node" data-node="n5a" data-chip="⑤a 정산 개발 DB 읽기" data-screens="S1" data-label="흐름 5a · 정산 개발 DB 읽기">
+            <rect class="n-rect" x="44" y="728" width="160" height="104" rx="12"/>
+            <text x="60" y="754" class="n-t">정산 개발 DB 읽기</text>
+            <text x="60" y="772" class="n-s">SELECT 전용</text>
+            <text x="60" y="790" class="n-s">WHERE 필수</text>
+            <circle cx="22" cy="756" r="11" class="n-no"/><text x="22" y="759.5" class="n-num is-two">5a</text>
+          </g>
+          <g class="node" data-node="n5b" data-chip="⑤b 배치 실행" data-screens="S1" data-label="흐름 5b · 배치 실행">
+            <rect class="n-rect" x="216" y="728" width="160" height="104" rx="12"/>
+            <text x="232" y="754" class="n-t">배치 실행</text>
+            <text x="232" y="772" class="n-s">스케줄러 호출</text>
+            <text x="232" y="790" class="n-s">차단 시간대 회피</text>
+            <circle cx="22" cy="756" r="11" class="n-no"/><text x="22" y="759.5" class="n-num is-two">5b</text>
+          </g>
+          <g class="node" data-node="n6" data-chip="⑥ 결과 계약 검증" data-screens="S3 S4" data-label="흐름 6 · 결과 계약 검증">
+            <rect class="n-rect" x="44" y="852" width="332" height="104" rx="14"/>
+            <text x="62" y="878" class="n-t">결과 계약 검증</text>
+            <text x="62" y="896" class="n-s">스키마 일치 · 건수 일치 · 골든 비교</text>
+            <text x="62" y="914" class="n-s">모의/실제 배지로 구분해 표시</text>
+            <circle cx="22" cy="880" r="11" class="n-no"/><text x="22" y="883.5" class="n-num">6</text>
+          </g>
+          <g class="node node-heal" data-node="n6b" data-chip="⑥b 자가 치유" data-screens="S3 S4" data-label="흐름 6b · 자가 치유">
+            <rect class="n-rect" x="216" y="990" width="160" height="104" rx="12"/>
+            <text x="232" y="1016" class="n-t">자가 치유</text>
+            <text x="232" y="1034" class="n-s">실패 분류 → 재시도</text>
+            <text x="232" y="1052" class="n-s">오분류 차단</text>
+            <circle cx="22" cy="1018" r="11" class="n-no"/><text x="22" y="1021.5" class="n-num is-two">6b</text>
+          </g>
+          <g class="node" data-node="n7" data-chip="⑦ 파일 영속화" data-screens="S3 S4" data-label="흐름 7 · 파일 영속화">
+            <rect class="n-rect" x="44" y="1128" width="332" height="86" rx="14"/>
+            <text x="62" y="1154" class="n-t">파일 영속화</text>
+            <text x="62" y="1172" class="n-s">JSON · MD · 1초 하트비트 flush</text>
+            <circle cx="22" cy="1156" r="11" class="n-no"/><text x="22" y="1159.5" class="n-num">7</text>
+          </g>
+          <g class="node node-done" data-node="n8" data-chip="⑧ 보고 · 응답" data-screens="S4" data-label="흐름 8 · 보고 응답">
+            <rect class="n-rect" x="44" y="1244" width="332" height="86" rx="14"/>
+            <text x="62" y="1270" class="n-t">보고 · 응답</text>
+            <text x="62" y="1288" class="n-s">14단계 요약 · 산출물 경로 · 실패 사유</text>
+            <circle cx="22" cy="1272" r="11" class="n-no"/><text x="22" y="1275.5" class="n-num">8</text>
+          </g>
+          </svg>
+<!--FLOW-SVG:END-->
+          <div class="xlink-layer" id="xlinkFlow"></div>
+          <div class="stage-pins" id="pins-flow"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
 
 <!-- ── 의견 목록 ──────────────────────────────────── -->
 <section class="panel" id="panel">
