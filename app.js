@@ -90,11 +90,50 @@
   }
 
   /* ── 렌더 ─────────────────────────────── */
+  /* 이전 판의 핀은 화면 구조가 바뀌면 위치가 어긋난다.
+     라벨로 붙잡을 수 있는 핀은 그 요소를 따라가게 다시 붙인다. */
+  var LABEL_ALIAS = { 'S1 대상 카드 · 개발 DB': 'S1 대상 카드 · 정산 개발 DB' };
+
+  function anchorEl(label) {
+    if (!label) return null;
+    var sel = '[data-label="' + label.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]';
+    try { return document.querySelector(sel); } catch (e) { return null; }
+  }
+
+  function bindLegacyAnchors() {
+    var changed = false;
+    S.pins.forEach(function (p) {
+      if (p.v === 2) return;
+      var label = LABEL_ALIAS[p.label] || p.label;
+      var el = anchorEl(label);
+      p.v = 2;
+      if (!el) return;
+      p.label = label;
+      p.anchor = label;
+      changed = true;
+    });
+    if (changed) save();
+  }
+
+  function placeOnAnchor(p) {
+    if (!p.anchor) return false;
+    var el = anchorEl(p.anchor);
+    if (!el) return false;
+    var st = stageEls[p.tab];
+    var sr = st.getBoundingClientRect(), er = el.getBoundingClientRect();
+    if (!sr.width || !sr.height) return false;      // 판이 아직 안 보임 → 보일 때 다시
+    p.x = Math.min(Math.max((er.left + er.width / 2 - sr.left) / sr.width, 0.012), 0.988);
+    p.y = Math.min(Math.max((er.top + er.height / 2 - sr.top) / sr.height, 0.008), 0.992);
+    return true;
+  }
+
   function renderPins() {
+    var moved = false;
     ['screen', 'flow'].forEach(function (tab) {
       var host = pinHosts[tab];
       host.innerHTML = '';
       pinsOf(tab).forEach(function (p) {
+        if (placeOnAnchor(p)) moved = true;
         var b = document.createElement('button');
         b.className = 'pin' + (p.comment ? ' is-saved' : '');
         b.style.left = (p.x * 100).toFixed(3) + '%';
@@ -106,6 +145,7 @@
         host.appendChild(b);
       });
     });
+    if (moved) save();                 // 붙잡은 위치를 그대로 기억
     renderBadges();
   }
 
@@ -383,6 +423,7 @@
       ensureFlowLinks();
       if (!S.userZoomed) fitFlow();
     }
+    if (S.pins.some(function (p) { return p.anchor; })) requestAnimationFrame(renderPins);
   }
 
   function setMode(mode) {
@@ -491,7 +532,7 @@
     y = Math.min(Math.max(y, 0.008), 0.992);
     var p = {
       id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-      no: nextNo(), tab: tab, x: x, y: y, label: label || null,
+      no: nextNo(), tab: tab, x: x, y: y, label: label || null, v: 2,
       comment: '', createdAt: Date.now(), updatedAt: 0, submittedAt: 0
     };
     if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
@@ -858,6 +899,7 @@
   bindFlow();
   bindScreenStage();
   buildScreenLinks();
+  bindLegacyAnchors();
   setTab('screen');
   setMode('move');
   if (location.hash === '#flow') setTab('flow');
