@@ -248,6 +248,7 @@ body.is-split .viewpane.is-on{display:block}
 }
 .side-item{
   font-size:10.5px;font-weight:600;color:#64748b;padding:6px 6px;border-radius:7px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .side-item.is-on{background:#e8effc;color:var(--accent-ink)}
 .pane{flex:1;padding:12px;min-width:0}
@@ -336,8 +337,8 @@ body.is-split .viewpane.is-on{display:block}
 .node rect{fill:#fff;stroke:#d7dee8;stroke-width:1.5}
 .node .n-t{font-size:14px;font-weight:800;fill:#111827}
 .node .n-s{font-size:11px;fill:#6b7a90}
-.node .n-no{fill:#eef2f7;stroke:none}
-.node .n-num{font-size:10px;font-weight:800;fill:#64748b;text-anchor:middle}
+.node .n-no{fill:#eef2f7;stroke:#dfe6f0;stroke-width:1}
+.node .n-num{font-size:10px;font-weight:800;fill:#475569;text-anchor:middle}
 .node .n-num.is-two{font-size:8.5px}
 .node-safety rect{fill:#fffdf7;stroke:#f2dfb4}
 .pill rect{fill:#f4f6fa;stroke:#e2e8f2;stroke-width:1}
