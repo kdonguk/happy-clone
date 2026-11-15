@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
 <meta name="theme-color" content="#111827">
-<meta name="rb-version" content="2026-11-15.v16-real">
+<meta name="rb-version" content="2026-11-15.v17-real">
 <title>TestAnchor 핀 리뷰 보드</title>
 <meta name="description" content="TestAnchor Studio 실제 화면과 서버 흐름도를 연결해 보는 핀 리뷰 보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111827'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23fbbf24'%3E%F0%9F%93%8C%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=2026-11-15.v16">
+<link rel="stylesheet" href="styles.css?v=2026-11-15.v17">
 </head>
 <body>
 
@@ -43,6 +43,7 @@
       <span class="tab-no">2</span> 서버 흐름도 <span class="tab-count" data-count="flow">0</span>
     </button>
   </nav>
+  <button class="guide-btn" id="guideBtn" aria-haspopup="dialog">🗺️ 전체 동작 안내</button>
   <button class="split-btn" id="splitBtn" aria-pressed="false" hidden>⇹ 나란히 보기</button>
 </div>
 
@@ -50,6 +51,7 @@
   <div class="seg" role="group" aria-label="모드">
     <button class="seg-btn is-on" data-mode="move" aria-pressed="true">👆 이동</button>
     <button class="seg-btn" data-mode="pin" aria-pressed="false">📌 핀 찍기</button>
+    <button class="seg-btn" data-mode="info" aria-pressed="false">📖 설명 보기</button>
   </div>
   <div class="zoom" id="zoomBox" hidden>
     <button class="zbtn" id="zoomOut" aria-label="축소">−</button>
@@ -636,6 +638,106 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js?v=2026-11-15.v16"></script>
+<!-- ── 설명 시트 (📖 설명 보기) ───────────────────── -->
+<div class="modal" id="infoModal" hidden>
+  <div class="modal-scrim" id="infoScrim"></div>
+  <div class="sheet sheet-info" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <span class="pin-badge info-badge" id="infoIcon" aria-hidden="true">📖</span>
+      <div class="sheet-titlewrap">
+        <h2 id="infoTitle">설명</h2>
+        <p class="sheet-where" id="infoWhere">화면 시안</p>
+      </div>
+      <button class="xbtn" id="infoClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="info-body" id="infoBody"></div>
+    <div class="sheet-foot">
+      <span class="spacer"></span>
+      <button class="btn" id="infoDone">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 전체 동작 안내 (🗺️) ───────────────────────── -->
+<div class="modal" id="guideModal" hidden>
+  <div class="modal-scrim" id="guideScrim"></div>
+  <div class="sheet sheet-guide" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <span class="pin-badge guide-badge" aria-hidden="true">🗺️</span>
+      <div class="sheet-titlewrap">
+        <h2 id="guideTitle">전체 동작 안내</h2>
+        <p class="sheet-where">처음 연결부터 결과 확인까지 — 실제로 쓰는 순서</p>
+      </div>
+      <button class="xbtn" id="guideClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="guide-body" id="guideBody">
+      <p class="guide-lead">이 보드는 <b>화면 5개</b>와 <b>서버 단계 13개</b>로 이어져 있습니다. 아래 네 단계 순서대로 쓰면 되고, 궁금한 곳은 <b>📖 설명 보기</b>로 눌러 확인할 수 있습니다.</p>
+
+      <section class="gstep" data-step="1">
+        <div class="gstep-h"><span class="gstep-no">1</span><span class="gstep-t">준비 · 연결</span><span class="gstep-sub">S3</span></div>
+        <ul>
+          <li><b>대상 시스템</b>을 고릅니다 — 검증할 서비스를 <b>[대상 시스템 (개발계)]</b>에서 선택합니다.</li>
+          <li><b>대상 DB</b>를 붙입니다 — 조회만 되는 설정으로 연결하고, 쓰기는 기본값 그대로 꺼 둡니다.</li>
+          <li><b>실행 환경</b>을 연결합니다 — 러너(direct · sandbox · bridge · local-sqlite) 중 하나를 고르고 코드맵 버전을 확인합니다.</li>
+          <li>연결되면 상단 배지에 <b>실제 LLM · 직접 연결 · 읽기전용 · 파일 영속 저장</b>이 뜹니다. 안전장치는 쓰기 차단 · WHERE 필수 · 차단 시간대(06:20~08:00) · LIVE 키 거부가 기본입니다.</li>
+        </ul>
+        <div class="info-jumps">
+          <button class="info-jump" data-go-screen="S3">S3 연결 화면 보기</button>
+          <button class="info-jump" data-go-node="n5">⑤ 실행 준비 단계 보기</button>
+        </div>
+      </section>
+
+      <section class="gstep" data-step="2">
+        <div class="gstep-h"><span class="gstep-no">2</span><span class="gstep-t">요구사항 입력 · 분석 · 방향 확정</span><span class="gstep-sub">S1</span></div>
+        <ul>
+          <li><b>적는 것</b> — 무엇을 확인하고 싶은지 제목과 본문에 한두 줄 적고 [분석 시작]을 누릅니다.</li>
+          <li><b>AI가 찾아 주는 것</b> — 본문에서 화면 · API · 서비스 메소드 · 도메인을 찾아 실제로 있는지 확인하고, 확인할 조건과 기대값 초안을 만듭니다.</li>
+          <li><b>사람이 확정하는 것</b> — [방향 확정] 한 번. 이 방향으로 가도 되는지 정하는 첫 승인입니다.</li>
+          <li>확정 전에는 개발 트랙과 테스트 트랙이 열리지 않습니다.</li>
+        </ul>
+        <div class="info-jumps">
+          <button class="info-jump" data-go-screen="S1">S1 요구사항 화면 보기</button>
+          <button class="info-jump" data-go-node="n3">③ 단계 진행 살펴보기</button>
+        </div>
+      </section>
+
+      <section class="gstep" data-step="3">
+        <div class="gstep-h"><span class="gstep-no">3</span><span class="gstep-t">구현 · 배포 · 테스트 실행</span><span class="gstep-sub">S2</span></div>
+        <ul>
+          <li><b>자동으로 도는 구간</b> — 14단계를 5개 게이트(정렬 → 계획 → 구현 → 검증 → 가시화)로 묶어 차례로 진행합니다. 구현 · 개발 배포 · 테스트 설계 · 테스트 실행 · 결과 확인 · 자가 치유는 사람 손 없이 돌아갑니다.</li>
+          <li><b>사람이 꼭 승인하는 3곳</b> — ③ 의도 컨펌 · ⑤ 계획 리뷰 · ⑩ 설계 리뷰. [승인하고 진행]을 누르기 전까지 다음으로 넘어가지 않습니다.</li>
+          <li><b>테스트 실행</b> — 승인된 케이스를 SQL 러너 · 배치 · HTTP로 실제로 돌립니다. 위험한 설정(쓰기 · WHERE 없는 변경 · 차단 시간대 · LIVE 키)은 실행 전에 막힙니다.</li>
+        </ul>
+        <div class="info-jumps">
+          <button class="info-jump" data-go-screen="S2">S2 14단계 · 승인 화면 보기</button>
+          <button class="info-jump" data-go-node="n4">④ 사람 승인 게이트 보기</button>
+        </div>
+      </section>
+
+      <section class="gstep" data-step="4">
+        <div class="gstep-h"><span class="gstep-no">4</span><span class="gstep-t">실행 결과 · 그 결과로 할 수 있는 것</span><span class="gstep-sub">S4 · S5</span></div>
+        <ul>
+          <li><b>검증 리포트</b> — 통과 · 실패 · 차단 요약, 결과 계약 점검(스키마 · 건수 · 골든 · 모의/실제), 실패 사유와 자가 치유 판정이 나옵니다.</li>
+          <li><b>완료 다이어그램</b> — 토폴로지 · 데이터 시퀀스 · DB Before/After와 함께 JSON · Markdown 산출물이 남습니다.</li>
+          <li><b>믿고 쓸 수 있는 이유</b> — 실행에 쓰인 커밋과 코드맵 버전이 함께 기록되고, 모의가 아닌 <b>actual</b> 배지가 붙습니다.</li>
+          <li><b>다음에 할 수 있는 것</b> — 이 결과를 그대로 배포 판단 근거로 쓰고, 같은 케이스를 다시 돌려 회귀 확인을 합니다.</li>
+        </ul>
+        <div class="info-jumps">
+          <button class="info-jump" data-go-screen="S4">S4 결과 화면 보기</button>
+          <button class="info-jump" data-go-screen="S5">S5 완료 다이어그램 보기</button>
+          <button class="info-jump" data-go-node="n8">⑧ 결과 검증 단계 보기</button>
+        </div>
+      </section>
+    </div>
+    <div class="sheet-foot">
+      <span class="spacer"></span>
+      <button class="btn" id="guideDone">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js?v=2026-11-15.v17"></script>
 </body>
 </html>
