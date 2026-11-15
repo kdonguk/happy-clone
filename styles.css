@@ -232,7 +232,7 @@ body.is-split .viewpane.is-on{display:block}
 .dots i:nth-child(2){background:#fcd34d}
 .dots i:nth-child(3){background:#86efac}
 .win-title{font-size:12px;font-weight:700;color:#334155}
-.win-tag{
+.win-tag{white-space:nowrap;
   margin-left:auto;font-size:10.5px;font-weight:700;color:#475569;
   background:#eef2f7;border-radius:999px;padding:2px 8px;
 }
@@ -614,6 +614,8 @@ body.is-split .viewpane.is-on{display:block}
 
 /* 좁은 화면 보정 */
 @media (max-width:410px){
+  .lc-live{flex-wrap:wrap}
+  .lc-live .lm{margin-left:0;text-align:left}
   .lc-stages li{font-size:8.5px;padding:2px 4px}
   .ta-idx{display:none}
   .fr-item{font-size:9.5px;padding:2px 5px}
