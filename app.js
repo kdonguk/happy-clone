@@ -505,18 +505,24 @@
   }
 
   /* ── 리뷰 ID ───────────────────────────── */
-  function changeReview() {
-    var v = window.prompt('리뷰 ID (프로젝트·버전 구분용)', S.reviewId);
-    if (v == null) return;
-    v = v.trim();
-    if (!v) return;
+  function openRidEditor() {
+    $('#ridInput').value = S.reviewId;
+    $('#ridEditor').hidden = false;
+    $('#ridInput').focus();
+    $('#ridInput').select();
+  }
+  function closeRidEditor() { $('#ridEditor').hidden = true; }
+
+  function applyReview() {
+    var v = $('#ridInput').value.trim();
+    if (!v) { closeRidEditor(); return; }
     if (!/^[A-Za-z0-9._-]{3,48}$/.test(v)) { toast('영문·숫자·-_. 3~48자로 적어 주세요', 'err'); return; }
     S.reviewId = v;
     var raw = null;
     try { raw = localStorage.getItem(LS_PINS + v); } catch (e) {}
-    S.pins = raw ? JSON.parse(raw) : [];
+    try { S.pins = raw ? JSON.parse(raw) : []; } catch (e) { S.pins = []; }
     if (!Array.isArray(S.pins)) S.pins = [];
-    save(); renderPins(); renderList(); renderBadges();
+    save(); renderPins(); renderList(); renderBadges(); closeRidEditor();
     toast('리뷰를 "' + v + '"(으)로 바꿨습니다');
   }
 
@@ -561,7 +567,13 @@
 
     $('#submitBtn').addEventListener('click', submit);
     $('#checkBtn').addEventListener('click', checkRecords);
-    $('#reviewChip').addEventListener('click', changeReview);
+    $('#reviewChip').addEventListener('click', openRidEditor);
+    $('#ridSave').addEventListener('click', applyReview);
+    $('#ridCancel').addEventListener('click', closeRidEditor);
+    $('#ridInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); applyReview(); }
+      if (e.key === 'Escape') { e.preventDefault(); closeRidEditor(); }
+    });
 
     window.addEventListener('resize', function () {
       if (S.tab === 'flow' && !S.userZoomed) fitFlow();
