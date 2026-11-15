@@ -91,6 +91,59 @@
 **1 준비·연결 → 2 요구사항 입력·분석·방향 확정 → 3 구현·배포·테스트 실행(사람 승인 3곳) → 4 실행 결과와 그 결과로 할 수 있는 것**.
 각 단계에서 관련 화면·서버 단계로 바로 이동하는 버튼이 붙어 있습니다. 모바일 390px 에서는 버튼이 탭 아래 한 줄로 내려가 넘치지 않습니다.
 
+### 🥒 피클 답변 보기
+
+남긴 의견에 피클이 답한 내용을 보드 안에서 같이 봅니다.
+
+- 의견 카드 바로 아래에 **`🥒 피클 답변`** 말풍선(답변 시각 + 내용)이 붙습니다.
+- 답변이 온 의견은 **`💬 답변 완료`**, 아직이면 **`⏳ 대기 중`**, 제출 전이면 **`제출 전`** 배지가 붙습니다.
+- 하단 서랍의 **`☁ 제출 기록`** 탭에서 서버에 남은 제출 의견과 답변을 모아 봅니다. `↻ 새로고침` 으로 다시 읽습니다.
+  액션바의 `☁ 제출 기록 확인` 을 눌러도 같은 곳이 열립니다.
+- 캔버스의 핀이나 `📌 남긴 의견` 행을 누르면 그 의견과 피클 답변이 입력 시트에서 함께 보입니다.
+
+답변은 두 곳에서 합쳐집니다.
+
+| 출처 | 담긴 것 | 수명 |
+| --- | --- | --- |
+| `replies.json` | 영구 보관. 의견 하나(`opinion`)에 답변(`replies`)을 시간순으로 | 저장소에 있는 한 계속 |
+| ntfy 채널 `kind: "reply"` | 실시간으로 도착한 답변 | 무료 채널이라 12시간 |
+
+### 피클 답변 추가하는 법
+
+`replies.json` 의 `opinions` 배열에 항목을 하나 더합니다.
+
+```json
+{
+  "pin_no": 1,
+  "pin_id": "rb-sample-v1-p1",
+  "review_ids": ["testanchor-real-v1", "testanchor-sample-v1"],
+  "origin_review_id": "testanchor-sample-v1",
+  "opinion": {
+    "tab": "screen", "target": "S1 대상 카드 · 개발 DB",
+    "x": 0.318, "y": 0.129,
+    "comment": "개발 db가 뭐야?",
+    "submitted_at": "2026-11-15T02:51:45.534Z"
+  },
+  "replies": [
+    { "id": "r-20261115-01", "at": "2026-11-15T07:54:44Z", "by": "피클", "text": "…" }
+  ]
+}
+```
+
+- `review_ids` — 이 답변을 보여 줄 리뷰 ID. 이전 판에서 제출된 의견은 두 판을 함께 적으면 양쪽에서 보입니다.
+- `opinion` — 제출된 의견 그대로(탭 · 대상 · 좌표 · 의견 · 제출 시각).
+- `replies` — 답변을 시간순으로 쌓습니다. `at` 은 답변 시각(UTC), `text` 는 내용입니다.
+- 의견을 찾는 순서: ① `pin_id` ② 의견 문구 ③ 핀 번호 + 탭.
+
+실시간으로 답할 때는 ntfy 채널에 아래 JSON 을 POST 합니다.
+
+```json
+{"app":"ta-review-board","kind":"reply","review_id":"testanchor-real-v1","pin_no":1,"pin_id":"…","comment":"개발 db가 뭐야?","replied_at":"2026-11-15T07:54:44Z","reply":"…"}
+```
+
+`comment` 가 같은 의견에 붙고, 없으면 `pin_no` 로 찾습니다. 점검은 콘솔에서
+`__taBoard.replyAudit()` — `ok: true` 이고 `answered`·`renderedReplies` 가 실제 화면과 맞으면 정상입니다.
+
 이전 판(`testanchor-sample-v1`)으로 저장돼 있던 리뷰 ID는 이 판에서 자동으로 `testanchor-real-v1`로 넘어갑니다.
 그때 남긴 핀은 이전 키에 그대로 남아 있고, 새 판은 빈 핀에서 시작합니다.
 
@@ -122,7 +175,7 @@ curl -s 'https://ntfy.sh/pk-ta-rb-9f24c1d7a3be5e60/json?poll=1&since=12h'
   "tz": "Asia/Seoul",
   "count": 2,
   "pins": [
-    { "no": 1, "tab": "screen", "target": "S2 실시간 진행", "x": 0.546, "y": 0.201, "comment": "…" },
+    { "no": 1, "pin_id": "p1x9f2", "tab": "screen", "target": "S2 실시간 진행", "x": 0.546, "y": 0.201, "comment": "…" },
     { "no": 2, "tab": "flow", "target": "흐름 5 · 실행 준비 · 안전장치", "x": 0.507, "y": 0.329, "comment": "…" }
   ]
 }
@@ -143,6 +196,7 @@ curl -s 'https://ntfy.sh/pk-ta-rb-9f24c1d7a3be5e60/json?poll=1&since=12h'
 - 화면 구조를 크게 바꾸면 이전 판의 핀은 라벨을 따라 자동으로 다시 붙습니다. 필요하면 콘솔에서
   `__taBoard.reanchor()` 로 한 번에 다시 붙일 수 있습니다.
 - 배포 후 캐시: `index.html` 의 `styles.css?v=…` · `app.js?v=…` · `rb-version` 을 함께 올려 주세요.
-- 동작·칩 생성·전송: `app.js` (`TOPIC` 상수만 바꾸면 다른 채널로 보냅니다)
+- 동작·칩 생성·전송·피클 답변 표시: `app.js` (`TOPIC` 상수만 바꾸면 다른 채널로 보냅니다)
+- 피클 답변 데이터(영구): `replies.json` — 위 「피클 답변 추가하는 법」 참고
 - 모양: `styles.css` (아래쪽 `TestAnchor 실제 화면 재현 블록`이 실제 앱 구성 요소)
 - 아이폰 크기 확인용: `_preview.html` (390 / 430 폭 iframe 미리보기)

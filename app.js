@@ -10,6 +10,7 @@
   var APP_ID = 'ta-review-board';
   var TOPIC = 'pk-ta-rb-9f24c1d7a3be5e60';
   var ENDPOINT = 'https://ntfy.sh/' + TOPIC;
+  var REPLIES_URL = 'replies.json';       // 피클 답변 영구 보관소 (같은 폴더)
   var LS_REVIEW = 'taRB.reviewId';
   var LS_PINS = 'taRB.pins.v1:';
   var DEFAULT_REVIEW = 'testanchor-real-v1';
@@ -38,7 +39,12 @@
     ty: 0,
     userZoomed: false,
     submitting: false,
-    flowChips: false
+    flowChips: false,
+    panelView: 'mine',   // mine | server
+    replies: [],         // replies.json 에서 이 리뷰에 해당하는 항목
+    remote: null,        // ntfy 에서 읽은 최근 제출·답변
+    repliesError: null,
+    serverCount: 0
   };
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -188,12 +194,14 @@
       li.dataset.id = p.id;
       var where = p.label || (p.tab === 'flow' ? '흐름도 ' + Math.round(p.x * 100) + '%, ' + Math.round(p.y * 100) + '%'
         : '시안 ' + Math.round(p.x * 100) + '%, ' + Math.round(p.y * 100) + '%');
+      var rl = repliesForPin(p);
       li.innerHTML =
         '<span class="pr-no">' + p.no + '</span>' +
         '<div class="pr-main">' +
         '<div class="pr-top"><span class="pr-tab">' + (p.tab === 'screen' ? '화면 시안' : '서버 흐름도') + '</span>' +
-        '<span class="pr-where">' + esc(where) + '</span></div>' +
+        '<span class="pr-where">' + esc(where) + '</span>' + stateBadge(p, rl) + '</div>' +
         '<div class="pr-text' + (p.comment ? '' : ' empty') + '">' + esc(p.comment || '의견을 입력하세요') + '</div>' +
+        replyBlockHtml(rl) +
         '</div>' +
         '<div class="pr-tools">' +
         '<button class="iconbtn" data-act="edit" aria-label="수정">✏️</button>' +
@@ -213,6 +221,281 @@
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
+  }
+
+  /* ── 🥒 피클 답변 ──────────────────────────
+     두 곳을 합쳐서 보여 준다.
+       · replies.json — 영구 보관. 의견 하나(opinion)에 답변(replies)을 시간순으로 붙인다.
+       · ntfy 채널   — 최근 12시간 제출분과 kind:"reply" 로 오는 실시간 답변.
+  ───────────────────────────────────────── */
+  function norm(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+
+  function fmtWhen(iso) {
+    if (!iso) return '';
+    var d = iso instanceof Date ? iso : new Date(iso);
+    if (isNaN(d.getTime())) return String(iso).slice(11, 16);
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function fmtFull(iso) {
+    if (!iso) return '';
+    var d = iso instanceof Date ? iso : new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var p = function (n) { return ('0' + n).slice(-2); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function replyTextOf(r) { return String((r && (r.text || r.reply)) || '').trim(); }
+  function replyAtOf(r) { return (r && (r.at || r.replied_at || '')) || ''; }
+  function replyIdOf(r) { return (r && r.id) || (norm(replyTextOf(r)) + '|' + replyAtOf(r)); }
+  function byReplyAt(a, b) { return String(a.at).localeCompare(String(b.at)); }
+
+  function normalizeReply(r) {
+    return { id: replyIdOf(r), at: replyAtOf(r), text: replyTextOf(r), by: (r && r.by) || '피클' };
+  }
+
+  /* replies.json 항목 → 보드가 쓰는 모양 */
+  function normalizeEntry(o) {
+    var op = o.opinion || {};
+    var rs = (o.replies || []).map(normalizeReply).filter(function (r) { return r.text; });
+    return {
+      pin_id: o.pin_id || null,
+      pin_no: o.pin_no != null ? o.pin_no : (op.no != null ? op.no : null),
+      origin_review_id: o.origin_review_id || null,
+      opinion: {
+        tab: op.tab || 'screen', target: op.target || '',
+        x: op.x, y: op.y,
+        comment: op.comment || '', submitted_at: op.submitted_at || null
+      },
+      replies: rs
+    };
+  }
+
+  /* 이 리뷰에 보일 항목인가 — review_ids 에 현재 ID 가 있거나, 리뷰 지정이 없으면 보인다 */
+  function entryOfReview(o) {
+    var ids = o.review_ids || (o.review_id ? [o.review_id] : []);
+    return !ids.length || ids.indexOf(S.reviewId) !== -1;
+  }
+
+  function repliesForPin(p) {
+    var out = [];
+    var t = norm(p.comment);
+    var pid = p.pin_id || p.id || null;
+    S.replies.forEach(function (e) {
+      var hit;
+      if (pid && e.pin_id && pid === e.pin_id) hit = true;
+      else if (t && norm(e.opinion.comment)) hit = t === norm(e.opinion.comment);
+      else hit = e.pin_no != null && e.pin_no === p.no && e.opinion.tab === p.tab;
+      if (!hit) return;
+      e.replies.forEach(function (r) {
+        if (!out.some(function (x) { return x.id === r.id; })) out.push(r);
+      });
+    });
+    return out.sort(byReplyAt);
+  }
+
+  function stateBadge(p, rl) {
+    if (rl && rl.length) return '<span class="pr-badge is-done">💬 답변 완료</span>';
+    if (p.submittedAt) return '<span class="pr-badge is-wait">⏳ 대기 중</span>';
+    return '<span class="pr-badge is-draft">제출 전</span>';
+  }
+
+  function replyBlockHtml(rs) {
+    if (!rs || !rs.length) return '';
+    var h = '<div class="reply">';
+    rs.forEach(function (r) {
+      h += '<div class="reply-head"><span class="reply-who">🥒 피클 답변</span>' +
+        (r.at ? '<span class="reply-at">' + esc(fmtWhen(r.at)) + '</span>' : '') + '</div>' +
+        '<p class="reply-text">' + esc(r.text) + '</p>';
+    });
+    return h + '</div>';
+  }
+
+  /* replies.json 읽기 */
+  function loadReplies() {
+    return fetch(REPLIES_URL + '?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) {
+        var all = (j && j.opinions) || [];
+        if (!Array.isArray(all)) all = [];
+        S.replies = all.filter(entryOfReview).map(normalizeEntry);
+        S.repliesError = null;
+        return S.replies;
+      })
+      .catch(function (e) { S.repliesError = e.message; throw e; });
+  }
+
+  /* ntfy 읽기 — 제출(최근 12시간)과 실시간 답변 */
+  function loadRemote() {
+    return fetch(ENDPOINT + '/json?poll=1&since=12h')
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (txt) {
+        var subs = [], reps = [];
+        txt.split('\n').forEach(function (l) {
+          if (!l.trim()) return;
+          try {
+            var m = JSON.parse(l);
+            if (m.event !== 'message' || !m.message) return;
+            var pl = JSON.parse(m.message);
+            if (!pl || pl.app !== APP_ID) return;
+            if (pl.kind === 'reply') {
+              if (entryOfReview(pl)) reps.push(pl);
+              return;
+            }
+            if (pl.review_id !== S.reviewId) return;
+            subs.push(pl);
+          } catch (e) {}
+        });
+        S.remote = { submissions: subs, replies: reps, at: Date.now(), error: null };
+        return S.remote;
+      })
+      .catch(function (e) {
+        S.remote = S.remote || { submissions: [], replies: [], at: 0 };
+        S.remote.error = e.message;
+        throw e;
+      });
+  }
+
+  /* 서버에 남은 의견 + 답변을 한 목록으로 병합 */
+  function buildServerOpinions() {
+    var out = [], byKey = {};
+    function keyOf(o) { return norm(o.comment) || ('#' + o.pin_no); }
+    function add(o) {
+      var k = keyOf(o), cur = byKey[k];
+      o.replies = o.replies || [];
+      o.sources = o.sources || [];
+      if (!cur) { byKey[k] = o; out.push(o); return o; }
+      if (o.submitted_at && (!cur.submitted_at || o.submitted_at < cur.submitted_at)) cur.submitted_at = o.submitted_at;
+      o.sources.forEach(function (s) { if (cur.sources.indexOf(s) === -1) cur.sources.push(s); });
+      if (!cur.pin_id && o.pin_id) cur.pin_id = o.pin_id;
+      if (cur.pin_no == null && o.pin_no != null) cur.pin_no = o.pin_no;
+      if (!cur.target && o.target) cur.target = o.target;
+      o.replies.forEach(function (r) {
+        if (!cur.replies.some(function (x) { return x.id === r.id; })) cur.replies.push(r);
+      });
+      return cur;
+    }
+
+    /* 1) 영구 보관된 답변 (replies.json) */
+    S.replies.forEach(function (e) {
+      add({
+        pin_no: e.pin_no, pin_id: e.pin_id, tab: e.opinion.tab, target: e.opinion.target,
+        comment: e.opinion.comment, submitted_at: e.opinion.submitted_at,
+        origin_review_id: e.origin_review_id, sources: ['replies.json'], replies: e.replies.slice()
+      });
+    });
+
+    /* 2) 최근 12시간 제출 기록 (ntfy) */
+    ((S.remote && S.remote.submissions) || []).forEach(function (pl) {
+      (pl.pins || []).forEach(function (p) {
+        add({
+          pin_no: p.no, pin_id: p.pin_id || null, tab: p.tab, target: p.target || '',
+          comment: p.comment || '', submitted_at: pl.submitted_at, sources: ['ntfy'], replies: []
+        });
+      });
+    });
+
+    /* 3) 실시간 답변 (ntfy kind:"reply") */
+    ((S.remote && S.remote.replies) || []).forEach(function (r) {
+      var rp = normalizeReply(r);
+      if (!rp.text) return;
+      var cur = norm(r.comment) ? byKey[norm(r.comment)] : null;
+      if (!cur && r.pin_no != null) {
+        var cands = out.filter(function (o) { return o.pin_no === r.pin_no; });
+        if (cands.length === 1) cur = cands[0];
+      }
+      if (!cur) {
+        cur = add({
+          pin_no: r.pin_no != null ? r.pin_no : null, pin_id: r.pin_id || null,
+          tab: r.tab || 'screen', target: r.target || '', comment: r.comment || '',
+          submitted_at: r.submitted_at || null, sources: ['ntfy'], replies: []
+        });
+      }
+      if (!cur.replies.some(function (x) { return x.id === rp.id; })) cur.replies.push(rp);
+    });
+
+    out.forEach(function (o) { o.replies.sort(byReplyAt); });
+    out.sort(function (a, b) {
+      var aw = a.replies.length ? 1 : 0, bw = b.replies.length ? 1 : 0;
+      if (aw !== bw) return bw - aw;
+      return String(b.submitted_at || '').localeCompare(String(a.submitted_at || ''));
+    });
+    return out;
+  }
+
+  function renderServer() {
+    var ul = $('#serverList');
+    if (!ul) return;
+    var ops = buildServerOpinions();
+    S.serverCount = ops.length;
+    ul.innerHTML = '';
+    $('#serverEmpty').hidden = ops.length > 0;
+    ops.forEach(function (o) {
+      var li = document.createElement('li');
+      li.className = 'pin-row is-saved rec-row';
+      var where = o.target || (o.tab === 'flow' ? '서버 흐름도' : '화면 시안');
+      var badge = o.replies.length
+        ? '<span class="pr-badge is-done">💬 답변 완료</span>'
+        : '<span class="pr-badge is-wait">⏳ 대기 중</span>';
+      var meta = [];
+      if (o.submitted_at) meta.push(fmtFull(o.submitted_at) + ' 제출');
+      if (o.origin_review_id && o.origin_review_id !== S.reviewId) {
+        meta.push('이전 판(' + o.origin_review_id + ')에서 제출한 의견');
+      }
+      li.innerHTML =
+        '<span class="pr-no">' + (o.pin_no == null ? '·' : o.pin_no) + '</span>' +
+        '<div class="pr-main">' +
+        '<div class="pr-top"><span class="pr-tab">' + (o.tab === 'flow' ? '서버 흐름도' : '화면 시안') + '</span>' +
+        '<span class="pr-where">' + esc(where) + '</span>' + badge + '</div>' +
+        '<div class="pr-text">' + esc(o.comment || '(의견 없음)') + '</div>' +
+        (meta.length ? '<div class="pr-meta">' + esc(meta.join(' · ')) + '</div>' : '') +
+        replyBlockHtml(o.replies) +
+        '</div>';
+      ul.appendChild(li);
+    });
+    var answered = ops.filter(function (o) { return o.replies.length; }).length;
+    var cnt = $('#replyCount');
+    if (cnt) cnt.textContent = answered;
+    var st = $('#serverStatus');
+    if (st) {
+      st.textContent = (S.remote && S.remote.error) && !S.replies.length
+        ? '서버 기록을 읽지 못했습니다 (' + S.remote.error + ')'
+        : '답변 ' + answered + '건 · 의견 ' + ops.length + '건';
+    }
+    return ops;
+  }
+
+  function loadServerRecords(loud) {
+    var st = $('#serverStatus');
+    if (st) st.textContent = '불러오는 중…';
+    return Promise.all([
+      loadReplies().catch(function () {}),
+      loadRemote().catch(function () {})
+    ]).then(function () {
+      renderList();
+      var ops = renderServer();
+      if (loud) {
+        var n = ops.filter(function (o) { return o.replies.length; }).length;
+        toast(n ? '피클 답변 ' + n + '건을 불러왔습니다' : '아직 도착한 피클 답변이 없습니다', n ? 'ok' : null);
+      }
+      return ops;
+    });
+  }
+
+  function setPanelView(v) {
+    S.panelView = v === 'server' ? 'server' : 'mine';
+    $$('.ptab').forEach(function (b) {
+      var on = b.dataset.pview === S.panelView;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    var mine = $('#viewMine'), srv = $('#viewServer');
+    if (mine) mine.hidden = S.panelView !== 'mine';
+    if (srv) srv.hidden = S.panelView !== 'server';
+  }
+
+  function openPanel() {
+    var p = $('#panel');
+    p.classList.add('is-open');
+    $('#panelHead').setAttribute('aria-expanded', 'true');
   }
 
   /* ── 화면 ↔ 흐름 연결 맵 ──────────────────
@@ -506,6 +789,20 @@
       : '시안 ' + Math.round(p.x * 100) + '%, ' + Math.round(p.y * 100) + '%');
     $('#sheetWhere').textContent = (p.tab === 'screen' ? '화면 시안' : '서버 흐름도') + ' · ' + where;
     $('#commentInput').value = p.comment || '';
+    var rl = repliesForPin(p);
+    var box = $('#sheetReply');
+    if (box) {
+      if (rl.length) {
+        box.innerHTML = replyBlockHtml(rl);
+        box.hidden = false;
+      } else if (p.submittedAt) {
+        box.innerHTML = '<p class="reply-wait">⏳ 보냈습니다. 피클 답변이 오면 여기와 <b>☁ 제출 기록</b>에 붙습니다.</p>';
+        box.hidden = false;
+      } else {
+        box.innerHTML = '';
+        box.hidden = true;
+      }
+    }
     $('#deleteBtn').hidden = !!o.isNew;
     $('#modal').hidden = false;
     setTimeout(function () { $('#commentInput').focus({ preventScroll: true }); }, 60);
@@ -527,7 +824,7 @@
     } else {
       p.comment = text; p.updatedAt = Date.now();
     }
-    save(); closeSheet(); renderPins(); renderList(); renderBadges();
+    save(); closeSheet(); renderPins(); renderList(); renderBadges(); renderServer();
     toast(isNew ? '핀 ' + p.no + '에 의견을 남겼습니다' : '핀 ' + p.no + ' 의견을 고쳤습니다', 'ok');
   }
 
@@ -771,6 +1068,7 @@
       pins: pins.map(function (p) {
         return {
           no: p.no,
+          pin_id: p.id,                 // 기기 안 핀 ID — 피클 답변을 정확히 붙일 때 쓴다
           tab: p.tab,
           target: p.label || null,
           x: +p.x.toFixed(3),
@@ -811,29 +1109,12 @@
     });
   }
 
-  /* ── 제출 기록 확인 ───────────────────── */
+  /* ── 제출 기록 확인 (☁ 남은 의견 · 피클 답변) ── */
   function checkRecords() {
+    openPanel();
+    setPanelView('server');
     toast('제출 기록을 확인하는 중…');
-    fetch(ENDPOINT + '/json?poll=1&since=12h')
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-      .then(function (txt) {
-        var lines = txt.split('\n').filter(function (l) { return l.trim(); });
-        var mine = [];
-        lines.forEach(function (l) {
-          try {
-            var m = JSON.parse(l);
-            if (m.event !== 'message' || !m.message) return;
-            var pl = JSON.parse(m.message);
-            if (pl && pl.app === APP_ID) mine.push(pl);
-          } catch (e) {}
-        });
-        var forReview = mine.filter(function (pl) { return pl.review_id === S.reviewId; });
-        if (!forReview.length) { toast('이 리뷰(' + S.reviewId + ')로 도착한 기록이 아직 없습니다'); return; }
-        var last = forReview[0];
-        var when = new Date(last.submitted_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-        toast('서버 기록 ' + forReview.length + '건 · 마지막 ' + when + ' (' + last.count + '개 핀)', 'ok');
-      })
-      .catch(function (e) { toast('확인 실패: ' + e.message, 'err'); });
+    loadServerRecords(true);
   }
 
   /* ── 리뷰 ID ───────────────────────────── */
@@ -1346,6 +1627,14 @@
 
     $('#submitBtn').addEventListener('click', submit);
     $('#checkBtn').addEventListener('click', checkRecords);
+    $$('.ptab').forEach(function (b) {
+      b.addEventListener('click', function () {
+        setPanelView(b.dataset.pview);
+        if (b.dataset.pview === 'server') loadServerRecords(false);
+      });
+    });
+    var sr = $('#serverRefresh');
+    if (sr) sr.addEventListener('click', function () { loadServerRecords(true); });
     $('#reviewChip').addEventListener('click', openRidEditor);
     $('#ridSave').addEventListener('click', applyReview);
     $('#ridCancel').addEventListener('click', closeRidEditor);
@@ -1380,6 +1669,8 @@
   renderPins();
   renderList();
   renderBadges();
+  setPanelView('mine');
+  loadServerRecords(false);      // 피클 답변은 조용히 먼저 불러 둔다
   applyFlow();
   setTimeout(function () {
     if (S.tab === 'flow') { ensureFlowLinks(); if (!S.userZoomed) fitFlow(); }
@@ -1427,6 +1718,27 @@
     focusScreen: focusScreen,
     audit: linkAudit,
     infoAudit: infoAudit,
+    replies: function () { return S.replies.slice(); },
+    serverOpinions: function () { return buildServerOpinions(); },
+    openServer: function () { checkRecords(); },
+    replyAudit: function () {
+      var ops = buildServerOpinions();
+      var answered = ops.filter(function (o) { return o.replies.length; });
+      return {
+        ok: !S.repliesError,
+        reviewId: S.reviewId,
+        fromFile: S.replies.length,
+        fromNtfy: (S.remote && S.remote.replies ? S.remote.replies.length : 0),
+        opinions: ops.length,
+        answered: answered.length,
+        unanswered: ops.length - answered.length,
+        renderedRows: $$('#serverList .rec-row').length,
+        renderedReplies: $$('#serverList .reply-text').length,
+        listReplies: $$('#pinList .reply-text').length,
+        tabCount: $('#replyCount') ? $('#replyCount').textContent : null,
+        error: S.repliesError
+      };
+    },
     openInfoFrom: openInfoFrom,
     openGuide: function () { $('#guideBody').scrollTop = 0; $('#guideModal').hidden = false; },
     reanchor: function () {           // 레이아웃이 바뀐 뒤 핀을 요소에 다시 붙인다

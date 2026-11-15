@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
 <meta name="theme-color" content="#111827">
-<meta name="rb-version" content="2026-11-15.v17a-real">
+<meta name="rb-version" content="2026-11-15.v18-real">
 <title>TestAnchor 핀 리뷰 보드</title>
 <meta name="description" content="TestAnchor Studio 실제 화면과 서버 흐름도를 연결해 보는 핀 리뷰 보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111827'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23fbbf24'%3E%F0%9F%93%8C%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=2026-11-15.v17a">
+<link rel="stylesheet" href="styles.css?v=2026-11-15.v18">
 </head>
 <body>
 
@@ -594,8 +594,22 @@
     <span class="ph-right"><span id="pendingLabel">제출 전 0건</span><span class="chev">▲</span></span>
   </button>
   <div class="panel-body" id="panelBody">
-    <ul class="pin-list" id="pinList"></ul>
-    <p class="empty" id="emptyMsg">아직 남긴 의견이 없습니다. 위에서 자리를 톡 누르면 핀이 꽂힙니다.</p>
+    <div class="ptabs" role="tablist" aria-label="의견 보기 전환">
+      <button class="ptab is-on" data-pview="mine" role="tab" aria-selected="true">📌 남긴 의견</button>
+      <button class="ptab" data-pview="server" role="tab" aria-selected="false">☁ 제출 기록 <b class="ptab-n" id="replyCount">0</b></button>
+    </div>
+    <div class="pview" id="viewMine">
+      <ul class="pin-list" id="pinList"></ul>
+      <p class="empty" id="emptyMsg">아직 남긴 의견이 없습니다. 위에서 자리를 톡 누르면 핀이 꽂힙니다.</p>
+    </div>
+    <div class="pview" id="viewServer" hidden>
+      <div class="server-bar">
+        <span id="serverStatus">제출 기록을 불러오는 중…</span>
+        <button class="linkbtn" id="serverRefresh">↻ 새로고침</button>
+      </div>
+      <ul class="pin-list" id="serverList"></ul>
+      <p class="empty" id="serverEmpty" hidden>이 리뷰로 제출된 기록이 아직 없습니다.</p>
+    </div>
   </div>
 </section>
 
@@ -627,6 +641,7 @@
       <button data-t="이 항목은 빼 주세요">이 항목은 빼 주세요</button>
       <button data-t="여기 좋아요, 유지">여기 좋아요, 유지</button>
     </div>
+    <div class="sheet-reply" id="sheetReply" hidden></div>
     <div class="sheet-foot">
       <button class="btn ghost danger" id="deleteBtn" hidden>삭제</button>
       <span class="spacer"></span>
@@ -738,6 +753,6 @@
   </div>
 </div>
 
-<script src="app.js?v=2026-11-15.v17a"></script>
+<script src="app.js?v=2026-11-15.v18"></script>
 </body>
 </html>

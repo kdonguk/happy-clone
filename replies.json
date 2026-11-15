@@ -1,0 +1,31 @@
+{
+  "app": "ta-review-board",
+  "kind": "replies",
+  "v": 1,
+  "updated_at": "2026-11-15T07:54:44Z",
+  "note": "피클 답변 보관소. 제출된 의견 하나에 답변을 시간순으로 붙인다. 고칠 때는 opinions 배열에만 손대면 된다.",
+  "opinions": [
+    {
+      "pin_id": "rb-sample-v1-p1",
+      "pin_no": 1,
+      "review_ids": ["testanchor-real-v1", "testanchor-sample-v1"],
+      "origin_review_id": "testanchor-sample-v1",
+      "opinion": {
+        "tab": "screen",
+        "target": "S1 대상 카드 · 개발 DB",
+        "x": 0.318,
+        "y": 0.129,
+        "comment": "개발 db가 뭐야?",
+        "submitted_at": "2026-11-15T02:51:45.534Z"
+      },
+      "replies": [
+        {
+          "id": "r-20261115-01",
+          "at": "2026-11-15T07:54:44Z",
+          "by": "피클",
+          "text": "TestAnchor가 데이터를 읽어올 대상 개발 DB를 뜻합니다. 동욱 님 의견 반영해 화면 표기는 '대상 DB (조회만)'으로 변경했습니다."
+        }
+      ]
+    }
+  ]
+}
