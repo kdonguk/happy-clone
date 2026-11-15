@@ -12,15 +12,18 @@
   var ENDPOINT = 'https://ntfy.sh/' + TOPIC;
   var LS_REVIEW = 'taRB.reviewId';
   var LS_PINS = 'taRB.pins.v1:';
-  var DEFAULT_REVIEW = 'testanchor-sample-v1';
+  var DEFAULT_REVIEW = 'testanchor-real-v1';
+  /* 구조를 전면 교체한 이전 판 — 이 ID로 저장된 화면이 새 판을 덮지 않게 한다 */
+  var LEGACY_REVIEWS = ['testanchor-sample-v1'];
   var SPLIT_MIN = 1024;
 
   /* 화면 이름 — 흐름도 노드의 칩 문구에 쓴다 */
   var SCREEN_META = {
-    S1: 'S1 실행 대상',
-    S2: 'S2 직접 연결',
-    S3: 'S3 14단계',
-    S4: 'S4 검증 결과'
+    S1: 'S1 요구사항 · 분석',
+    S2: 'S2 14단계 · 승인',
+    S3: 'S3 연결 · 안전장치',
+    S4: 'S4 테스트 실행',
+    S5: 'S5 완료 다이어그램'
   };
 
   var S = {
@@ -53,6 +56,11 @@
   function load() {
     try {
       var rid = localStorage.getItem(LS_REVIEW);
+      // 이전 판(샘플 구조)으로 저장된 리뷰는 새 판으로 넘긴다 — 저장된 핀은 그 키에 그대로 남는다.
+      if (rid && LEGACY_REVIEWS.indexOf(rid) !== -1) {
+        rid = null;
+        try { localStorage.removeItem(LS_REVIEW); } catch (e) {}
+      }
       if (rid) S.reviewId = rid;
       var raw = localStorage.getItem(LS_PINS + S.reviewId);
       S.pins = raw ? JSON.parse(raw) : [];
@@ -92,7 +100,7 @@
   /* ── 렌더 ─────────────────────────────── */
   /* 이전 판의 핀은 화면 구조가 바뀌면 위치가 어긋난다.
      라벨로 붙잡을 수 있는 핀은 그 요소를 따라가게 다시 붙인다. */
-  var LABEL_ALIAS = { 'S1 대상 카드 · 개발 DB': 'S1 대상 카드 · 정산 개발 DB' };
+  var LABEL_ALIAS = {};
 
   function anchorEl(label) {
     if (!label) return null;
