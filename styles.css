@@ -330,7 +330,7 @@ button{font:inherit;color:inherit}
 .modal[hidden]{display:none}
 .modal-scrim{position:absolute;inset:0;background:rgba(15,23,42,.45)}
 .sheet{
-  position:relative;width:100%;background:#fff;border-radius:20px 20px 0 0;
+  position:relative;width:100%;max-width:620px;margin:0 auto;background:#fff;border-radius:20px 20px 0 0;
   padding:8px 16px calc(14px + var(--safe-b));
   box-shadow:0 -12px 40px -12px rgba(15,23,42,.5);
   animation:rise .22s ease-out;
