@@ -376,7 +376,14 @@ button{font:inherit;color:inherit}
 }
 
 /* ── 좁은 화면 ────────────────────────── */
-@media (max-width:420px){
+@media (max-width:410px){
+  .side{display:none}
+  .steps{grid-template-columns:1fr 1fr;gap:2px 6px}
+  .steps li{font-size:10px}
+  .pane{padding:10px}
+  .brand-sub{display:none}
+}
+@media (max-width:420px) and (min-width:411px){
   .side{flex-basis:56px}
   .side-item{font-size:9.5px;padding:5px 4px}
   .steps{grid-template-columns:1fr 1fr;gap:2px 6px}

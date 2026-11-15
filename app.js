@@ -575,6 +575,8 @@
   bindScreenStage();
   setTab('screen');
   setMode('move');
+  if (location.hash === '#flow') setTab('flow');
+  else if (location.hash === '#screen') setTab('screen');
   renderPins();
   renderList();
   renderBadges();
