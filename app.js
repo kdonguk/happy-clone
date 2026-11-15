@@ -290,7 +290,7 @@
   /* 흐름도 포인터(드래그·핀치·탭) */
   function bindFlow() {
     var pts = new Map();
-    var drag = null, pinch = null, tapStart = null, moved = false;
+    var drag = null, pinch = null, tapStart = null, moved = false, tapTarget = null;
 
     function local(e) {
       var r = flowview.getBoundingClientRect();
@@ -306,6 +306,7 @@
       if (pts.size === 1) {
         drag = { x: e.clientX, y: e.clientY, tx: S.tx, ty: S.ty };
         tapStart = { x: e.clientX, y: e.clientY, t: Date.now() };
+        tapTarget = e.target;
         moved = false;
       } else if (pts.size === 2) {
         var v = Array.from(pts.values());
@@ -355,7 +356,7 @@
         var wasTap = !moved && dx < 10 && dy < 10 && dt < 700;
         tapStart = null;
         if (wasTap && S.mode === 'pin') {
-          var lbl = e.target && e.target.closest ? e.target.closest('[data-label]') : null;
+          var lbl = tapTarget && tapTarget.closest ? tapTarget.closest('[data-label]') : null;
           placePin('flow', e.clientX, e.clientY, lbl ? lbl.dataset.label : null);
         }
       }
